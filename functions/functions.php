@@ -35,6 +35,19 @@ function getKendaraanLengkap() {
     ");
 }
 
+function getUserLengkap() {
+    return query("
+        SELECT u.id, u.nama, u.username, d.nama_divisi, r.nama_roles
+        FROM user u
+        INNER JOIN divisi d ON u.id_divisi = d.id
+        INNER JOIN roles r ON u.id_roles = r.id
+    ");
+}
+
+function getPemakaianLengkap() {
+    
+}
+
 function getCount($table) {
     global $conn;
     $stmt = $conn->prepare("SELECT COUNT(*) as total FROM `$table`");

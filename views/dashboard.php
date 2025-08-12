@@ -19,6 +19,9 @@ $jumlahUser      = getCount('user');
 
 // Data kendaraan
 $kendaraan = getKendaraanLengkap();
+
+// Data User
+$user = getUserLengkap();
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -139,35 +142,25 @@ $kendaraan = getKendaraanLengkap();
     <!-- Tabel Data 2 (Copy) -->
     <div class="card mb-4 card-table">
         <div class="card-header">
-            Daftar Kendaraan (Copy)
+            Daftar User
         </div>
         <div class="card-body">
             <table id="dataTable2" class="table table-striped table-bordered">
                 <thead>
                     <tr>
-                        <th>Plat Nomor</th>
-                        <th>Nomor STNK</th>
-                        <th>Bahan Bakar</th>
-                        <th>Warna</th>
-                        <th>Jenis</th>
-                        <th>Merek</th>
-                        <th>Kilometer</th>
-                        <th>Lokasi</th>
-                        <th>Status</th>
+                        <th>Nama</th>
+                        <th>Username</th>
+                        <th>Divisi</th>
+                        <th>Roles</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($kendaraan as $row) : ?>
+                    <?php foreach ($user as $row) : ?>
                         <tr>
-                            <td><?= $row['plat_nomor'] ?></td>
-                            <td><?= $row['nomor_stnk'] ?></td>
-                            <td><?= $row['bahan_bakar'] ?></td>
-                            <td><?= $row['warna'] ?></td>
-                            <td><?= $row['jenis_kendaraan'] ?></td>
-                            <td><?= $row['merek'] ?></td>
-                            <td><?= number_format($row['kilometer']) ?></td>
-                            <td><?= $row['nama_lokasi'] ?></td>
-                            <td><?= $row['nama_status'] ?></td>
+                            <td><?= $row['nama'] ?></td>
+                            <td><?= $row['username']?></td>
+                            <td><?= $row['nama_divisi']?></td>
+                            <td><?= $row['nama_roles']?></td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
