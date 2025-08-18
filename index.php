@@ -1,5 +1,7 @@
 <?php 
 session_start();
+$logout_success = isset($_SESSION['logout_success']) && $_SESSION['logout_success'] === true;
+unset($_SESSION['logout_success']); // hapus setelah ditampilkan
 require "../inventaris/functions/functions.php";
 
 $status = ""; // Variabel untuk status notifikasi
@@ -46,6 +48,7 @@ if (isset($_POST['submit'])) {
         </div>
     </div>
 
+    <!-- Login -->
     <?php if ($status == "success"): ?>
     <script>
         Swal.fire({
@@ -68,6 +71,20 @@ if (isset($_POST['submit'])) {
             showConfirmButton: false
         });
     </script>
+
+    <?php endif; ?>
+    
+    <!-- Logout -->
+     <?php if ($logout_success): ?>
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script>
+        Swal.fire({
+            title: 'Logout Berhasil!',
+            text: 'Anda telah keluar dari sistem.',
+            icon: 'success',
+            confirmButtonText: 'OK'
+        });
+        </script>
     <?php endif; ?>
 </body>
 </html>

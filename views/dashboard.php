@@ -7,8 +7,9 @@ if (!isset($_SESSION['logged_in'])) {
     exit;
 }
 
-if (isset($_GET['logout'])) {
-    logout();
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['logout'])) {
+    logout(); // Panggil function logout() yang sudah kamu punya
+    exit;
 }
 
 // Hitung jumlah data di tiap tabel

@@ -24,6 +24,12 @@ if ($page == 'user') {
 } elseif ($page == 'divisi') {
     $colCount += 1;
 }
+
+// Logout
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['logout'])) {
+    logout(); // Panggil function logout() yang sudah kamu punya
+    exit;
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -108,7 +114,7 @@ if ($page == 'user') {
                                         <td><?= $row['nama_divisi'] ?></td>
                                     <?php endif; ?>
                                     <td>
-                                        <a href="view_detail.php?type=<?= $page ?>&id=<?= $row['id'] ?>" class="btn btn-info btn-sm">View</a>
+                                        <a href="detail.php?type=<?= $page ?>&id=<?= $row['id'] ?>" class="btn btn-info btn-sm">View</a>
                                         <a href="edit.php?type=<?= $page ?>&id=<?= $row['id'] ?>" class="btn btn-warning btn-sm">Edit</a>
                                         <a href="delete.php?type=<?= $page ?>&id=<?= $row['id'] ?>" class="btn btn-danger btn-sm" onclick="return confirm('Yakin ingin hapus?')">Hapus</a>
                                     </td>

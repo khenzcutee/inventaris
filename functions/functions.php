@@ -356,6 +356,45 @@ function getDataView($page) {
     return $data;
 }
 
+function getDetailData($type, $id) {
+    global $conn;
+    $id = (int)$id;
+    $sql = "";
+
+    if ($type == 'user') {
+        $sql = "SELECT u.id, u.nama, u.username, d.nama_divisi, r.nama_roles, u.created_at, u.updated_at
+                FROM `user` u
+                INNER JOIN divisi d ON u.id_divisi = d.id
+                INNER JOIN roles r ON u.id_roles = r.id
+                WHERE u.id = $id";
+    } elseif ($type == 'kendaraan') {
+        $sql = "SELECT k.id, k.plat_nomor, k.nomor_stnk, k.bahan_bakar, k.warna,
+                       k.jenis_kendaraan, k.merek, k.kilometer, l.nama_lokasi, s.nama_status,
+                       k.created_at, k.updated_at
+                FROM kendaraan k
+                INNER JOIN lokasi l ON k.id_lokasi = l.id
+                INNER JOIN status s ON k.id_status = s.id
+                WHERE k.id = $id";
+    } elseif ($type == 'pemakaian') {
+        $sql = "SELECT p.id, u.nama AS pengguna, k.plat_nomor, p.tanggal_keluar, p.tanggal_masuk, 
+                       p.keterangan, s.nama_status, p.created_at
+                FROM pemakaian p
+                INNER JOIN `user` u ON p.id_user = u.id
+                INNER JOIN kendaraan k ON p.id_inventaris = k.id
+                INNER JOIN status s ON p.id_status = s.id
+                WHERE p.id = $id";
+    } elseif ($type == 'divisi') {
+        $sql = "SELECT id, nama_divisi FROM divisi WHERE id = $id";
+    } else {
+        return null; // Jika type tidak dikenali
+    }
+
+    $result = mysqli_query($conn, $sql);
+    if (!$result) {
+        return null;
+    }
+    return mysqli_fetch_assoc($result);
+}
 
 function login($data) {
     global $conn;
