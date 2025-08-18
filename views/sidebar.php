@@ -3,11 +3,11 @@
         <!-- Sidebar -->
         <div class="col-md-2 sidebar">
             <h5 class="px-3">📂 Menu</h5>
-            <a href="divisi.php">Divisi</a>
-            <a href="kendaraan.php">Kendaraan</a>
-            <a href="lokasi.php">Lokasi</a>
-            <a href="pemakaian.php">Pemakaian</a>
-            <a href="roles.php">Roles</a>
-            <a href="status.php">Status</a>
-            <a href="user.php">User</a>
+            <a href="view_Data.php?type=divisi">Divisi</a>
+            <a href="view_Data.php?type=kendaraan">Kendaraan</a>
+            <a href="view_Data.php?type=lokasi">Lokasi</a>
+            <a href="view_Data.php?type=pemakaian">Pemakaian</a>
+            <a href="view_Data.php?type=roles">Roles</a>
+            <a href="view_Data.php?type=status">Status</a>
+            <a href="view_Data.php?type=user">User</a>
         </div>
