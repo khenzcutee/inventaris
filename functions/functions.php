@@ -376,8 +376,8 @@ function getDetailData($type, $id) {
                 INNER JOIN status s ON k.id_status = s.id
                 WHERE k.id = $id";
     } elseif ($type == 'pemakaian') {
-        $sql = "SELECT p.id, u.nama AS pengguna, k.plat_nomor, p.tanggal_keluar, p.tanggal_masuk, 
-                       p.keterangan, s.nama_status, p.created_at
+        $sql = "SELECT p.id, u.nama AS nama_user, k.plat_nomor, p.tanggal_keluar, p.tanggal_masuk, 
+                       s.nama_status, p.created_at, p.created_at, p.updated_at
                 FROM pemakaian p
                 INNER JOIN `user` u ON p.id_user = u.id
                 INNER JOIN kendaraan k ON p.id_inventaris = k.id
@@ -394,6 +394,83 @@ function getDetailData($type, $id) {
         return null;
     }
     return mysqli_fetch_assoc($result);
+}
+
+function updateData($type, $id, $data) {
+    global $conn;
+    $id = (int)$id;
+
+    if ($type == 'user') {
+        $nama = mysqli_real_escape_string($conn, $data['nama']);
+        $username = mysqli_real_escape_string($conn, $data['username']);
+        $id_divisi = (int)$data['id_divisi'];
+        $id_roles = (int)$data['id_roles'];
+
+        $sql = "UPDATE `user` 
+                SET nama='$nama', username='$username', id_divisi=$id_divisi, id_roles=$id_roles 
+                WHERE id=$id";
+    }
+    elseif ($type == 'kendaraan') {
+        $plat_nomor = mysqli_real_escape_string($conn, $data['plat_nomor']);
+        $nomor_stnk = mysqli_real_escape_string($conn, $data['nomor_stnk']);
+        $bahan_bakar = mysqli_real_escape_string($conn, $data['bahan_bakar']);
+        $warna = mysqli_real_escape_string($conn, $data['warna']);
+        $jenis_kendaraan = mysqli_real_escape_string($conn, $data['jenis_kendaraan']);
+        $merek = mysqli_real_escape_string($conn, $data['merek']);
+        $kilometer = (int)$data['kilometer'];
+        $id_lokasi = (int)$data['id_lokasi'];
+        $id_status = (int)$data['id_status'];
+
+        $sql = "UPDATE kendaraan 
+                SET plat_nomor='$plat_nomor', nomor_stnk='$nomor_stnk', bahan_bakar='$bahan_bakar', warna='$warna', 
+                    jenis_kendaraan='$jenis_kendaraan', merek='$merek', kilometer=$kilometer, id_lokasi=$id_lokasi, id_status=$id_status
+                WHERE id=$id";
+    }
+    elseif ($type == 'pemakaian') {
+        $id_user = (int)$data['id_user'];
+        $id_inventaris = (int)$data['id_inventaris'];
+        $tanggal_keluar = mysqli_real_escape_string($conn, $data['tanggal_keluar']);
+        $tanggal_masuk = mysqli_real_escape_string($conn, $data['tanggal_masuk']);
+        $id_status = (int)$data['id_status'];
+
+        $sql = "UPDATE pemakaian 
+                SET id_user=$id_user, id_inventaris=$id_inventaris, tanggal_keluar='$tanggal_keluar', tanggal_masuk='$tanggal_masuk', id_status=$id_status
+                WHERE id=$id";
+    }
+    elseif ($type == 'divisi') {
+        $nama_divisi = mysqli_real_escape_string($conn, $data['nama_divisi']);
+        $sql = "UPDATE divisi SET nama_divisi='$nama_divisi' WHERE id=$id";
+    }
+    else {
+        return false;
+    }
+
+    return mysqli_query($conn, $sql);
+}
+
+function deleteData($type, $id) {
+    global $conn;
+    $id = (int)$id;
+
+    if ($type === 'user') {
+        $sql = "DELETE FROM user WHERE id = $id";
+    } elseif ($type === 'kendaraan') {
+        $sql = "DELETE FROM kendaraan WHERE id = $id";
+    } elseif ($type === 'pemakaian') {
+        $sql = "DELETE FROM pemakaian WHERE id = $id";
+    } elseif ($type === 'divisi') {
+        $sql = "DELETE FROM divisi WHERE id = $id";
+    } elseif ($type === 'lokasi') {
+        $sql = "DELETE FROM lokasi WHERE id = $id";
+    } elseif ($type === 'roles') {
+        $sql = "DELETE FROM roles WHERE id = $id";
+    } elseif ($type === 'status') {
+        $sql = "DELETE FROM status WHERE id = $id";
+    } else {
+        return false;
+    }
+
+    return mysqli_query($conn, $sql);
 }
 
 function login($data) {

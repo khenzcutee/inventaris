@@ -25,6 +25,18 @@ if ($page == 'user') {
     $colCount += 1;
 }
 
+// Handle delete request
+if (isset($_GET['delete']) && isset($_GET['id']) && isset($_GET['type'])) {
+    $deleteType = $_GET['type'];
+    $deleteId = (int)$_GET['id'];
+
+    if (deleteData($deleteType, $deleteId)) {
+        echo "<script>alert('Data berhasil dihapus!'); window.location='view_Data.php?type=$deleteType';</script>";
+    } else {
+        echo "<script>alert('Gagal menghapus data!');</script>";
+    }
+}
+
 // Logout
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['logout'])) {
     logout(); // Panggil function logout() yang sudah kamu punya
@@ -116,7 +128,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['logout'])) {
                                     <td>
                                         <a href="detail.php?type=<?= $page ?>&id=<?= $row['id'] ?>" class="btn btn-info btn-sm">View</a>
                                         <a href="edit.php?type=<?= $page ?>&id=<?= $row['id'] ?>" class="btn btn-warning btn-sm">Edit</a>
-                                        <a href="delete.php?type=<?= $page ?>&id=<?= $row['id'] ?>" class="btn btn-danger btn-sm" onclick="return confirm('Yakin ingin hapus?')">Hapus</a>
+                                        <a href="view_Data.php?type=<?= $page ?>&delete=1&id=<?= $row['id'] ?>" class="btn btn-danger btn-sm" onclick="return confirm('Yakin ingin hapus?')">Hapus</a>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>

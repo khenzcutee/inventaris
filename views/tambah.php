@@ -9,75 +9,151 @@ if (!isset($_SESSION['logged_in'])) {
 
 $type = $_GET['type'] ?? null;
 
+// Proses form submit
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($type === 'user') {
-        if (tambahUser($_POST)) {
-            echo "User berhasil ditambahkan!";
-        } else {
-            echo "Gagal menambahkan user!";
-        }
+        $result = tambahUser($_POST);
     } elseif ($type === 'kendaraan') {
-        if (tambahKendaraan($_POST, $_FILES)) {
-            echo "Kendaraan berhasil ditambahkan!";
-        } else {
-            echo "Gagal menambahkan kendaraan!";
-        }
+        $result = tambahKendaraan($_POST, $_FILES);
     } elseif ($type === 'pemakaian') {
-        if (tambahPemakaian($_POST)) {
-            echo "Pemakaian berhasil ditambahkan!";
-        } else {
-            echo "Gagal menambahkan pemakaian!";
-        }
+        $result = tambahPemakaian($_POST);
     } else {
-        echo "Form tidak ditemukan!";
+        $result = false;
+    }
+
+    if ($result) {
+        echo "<script>alert('Data berhasil ditambahkan!');window.location='view_Data.php?type=$type';</script>";
+    } else {
+        echo "<script>alert('Gagal menambahkan data!');</script>";
     }
 }
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
-    <title>Tambah Data</title>
+    <meta charset="UTF-8">
+    <title>Tambah <?= ucfirst($type) ?> - Inventaris</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="../assets/css/dashboard.css" rel="stylesheet">
 </head>
-<body>
-<h2>Form Tambah <?= ucfirst($type) ?></h2>
-<form action="" method="post" enctype="multipart/form-data">
-<?php
-if ($type === 'user') {
-?>
-    <input type="text" name="nama" placeholder="Nama" required><br>
-    <input type="text" name="username" placeholder="Username" required><br>
-    <input type="password" name="password" placeholder="Password" required><br>
-    <select name="id_roles"><?= getRolesOptions(); ?></select><br>
-    <select name="id_divisi"><?= getDivisiOptions(); ?></select><br>
-    <button type="submit">Simpan</button>
-<?php
-} elseif ($type === 'kendaraan') {
-?>
-    <input type="text" name="plat_nomor" placeholder="Plat Nomor" required><br>
-    <input type="text" name="nomor_stnk" placeholder="Nomor STNK" required><br>
-    <input type="text" name="bahan_bakar" placeholder="Bahan Bakar"><br>
-    <input type="text" name="warna" placeholder="Warna"><br>
-    <input type="text" name="jenis_kendaraan" placeholder="Jenis Kendaraan"><br>
-    <input type="text" name="merek" placeholder="Merek"><br>
-    <input type="number" name="kilometer" placeholder="Kilometer"><br>
-    <input type="file" name="gambar"><br>
-    <select name="id_lokasi"><?= getLokasiOptions(); ?></select><br>
-    <select name="id_status"><?= getStatusOptions(); ?></select><br>
-    <button type="submit">Simpan</button>
-<?php
-} elseif ($type === 'pemakaian') {
-?>
-    <select name="id_user"><?= getUserOptions(); ?></select><br>
-    <select name="id_inventaris"><?= getKendaraanOptions(); ?></select><br>
-    <input type="date" name="tanggal_keluar" required><br>
-    <input type="date" name="tanggal_masuk"><br>
-    <select name="id_status"><?= getStatusOptions(); ?></select><br>
-    <button type="submit">Simpan</button>
-<?php
-} else {
-    echo "Form tidak tersedia.";
-}
-?>
-</form>
+<body class="d-flex flex-column min-vh-100">
+<?php include "navbar.php"; ?>
+<div class="d-flex">
+    <?php include "sidebar.php"; ?>
+
+    <!-- Main Content -->
+    <div class="col-md-10 p-4">
+        <h2 class="mb-4 text-primary">➕ Tambah <?= ucfirst($type) ?></h2>
+        <a href="view_Data.php?type=<?= $type ?>" class="btn btn-secondary mb-3">← Kembali</a>
+
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                Form Tambah <?= ucfirst($type) ?>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data" class="row g-3">
+
+                    <?php if ($type === 'user'): ?>
+                        <div class="col-md-6">
+                            <label class="form-label">Nama</label>
+                            <input type="text" name="nama" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Username</label>
+                            <input type="text" name="username" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Password</label>
+                            <input type="password" name="password" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Roles</label>
+                            <select name="id_roles" class="form-select"><?= getRolesOptions(); ?></select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Divisi</label>
+                            <select name="id_divisi" class="form-select"><?= getDivisiOptions(); ?></select>
+                        </div>
+
+                    <?php elseif ($type === 'kendaraan'): ?>
+                        <div class="col-md-6">
+                            <label class="form-label">Plat Nomor</label>
+                            <input type="text" name="plat_nomor" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Nomor STNK</label>
+                            <input type="text" name="nomor_stnk" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Bahan Bakar</label>
+                            <input type="text" name="bahan_bakar" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Warna</label>
+                            <input type="text" name="warna" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Jenis Kendaraan</label>
+                            <input type="text" name="jenis_kendaraan" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Merek</label>
+                            <input type="text" name="merek" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Kilometer</label>
+                            <input type="number" name="kilometer" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Gambar</label>
+                            <input type="file" name="gambar" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Lokasi</label>
+                            <select name="id_lokasi" class="form-select"><?= getLokasiOptions(); ?></select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Status</label>
+                            <select name="id_status" class="form-select"><?= getStatusOptions(); ?></select>
+                        </div>
+
+                    <?php elseif ($type === 'pemakaian'): ?>
+                        <div class="col-md-6">
+                            <label class="form-label">User</label>
+                            <select name="id_user" class="form-select"><?= getUserOptions(); ?></select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Kendaraan</label>
+                            <select name="id_inventaris" class="form-select"><?= getKendaraanOptions(); ?></select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Tanggal Keluar</label>
+                            <input type="date" name="tanggal_keluar" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Tanggal Masuk</label>
+                            <input type="date" name="tanggal_masuk" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Status</label>
+                            <select name="id_status" class="form-select"><?= getStatusOptions(); ?></select>
+                        </div>
+
+                    <?php else: ?>
+                        <div class="col-12 text-danger">
+                            Form tidak tersedia untuk tipe ini.
+                        </div>
+                    <?php endif; ?>
+
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-success">✅ Simpan</button>
+                        <a href="view_Data.php?type=<?= $type ?>" class="btn btn-secondary">❌ Batal</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
