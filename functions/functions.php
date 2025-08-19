@@ -311,6 +311,52 @@ function tambahPemakaian($data) {
     }
 }
 
+function tambahDivisi($data) {
+    global $conn;
+    $nama_divisi = htmlspecialchars($data['nama_divisi']);
+    $user_id = $_SESSION['user_id'];
+
+    $query = "INSERT INTO divisi (nama_divisi, created_at, updated_at, created_by, updated_by)
+              VALUES ('$nama_divisi', NOW(), NOW(), $user_id, $user_id)";
+    
+    return mysqli_query($conn, $query);
+}
+
+function tambahLokasi($data) {
+    global $conn;
+    $nama_lokasi = htmlspecialchars($data['nama_lokasi']);
+    $alamat = htmlspecialchars($data['alamat']);
+    $user_id = $_SESSION['user_id'];
+
+    $query = "INSERT INTO lokasi (nama_lokasi, alamat, created_At, updated_at, created_by, updated_by)
+              VALUES ('$nama_lokasi', '$alamat', NOW(), NOW(), $user_id, $user_id)";
+    
+    return mysqli_query($conn, $query);
+
+}
+
+function tambahRoles($data) {
+    global $conn;
+    $nama_roles = htmlspecialchars($data['nama_roles']);
+    $user_id = $_SESSION['user_id'];
+
+    $query = "INSERT INTO roles (nama_roles, created_at, updated_at, created_by, updated_by)
+              VALUES ('$nama_roles', NOW(), NOW(), $user_id, $user_id)";
+    
+    return mysqli_query($conn, $query);
+}
+
+function tambahStatus($data) {
+    global $conn;
+    $nama_status = htmlspecialchars($data['nama_status']);
+    $user_id = $_SESSION['user_id'];
+
+    $query = "INSERT INTO status (nama_status, created_at, updated_at, created_by, updated_by)
+              VALUES ('$nama_status', NOW(), NOW(), $user_id, $user_id)";
+
+    return mysqli_query($conn , $query);
+}
+
 function getDataView($page) {
     global $conn;
     $sql = "";
@@ -338,6 +384,15 @@ function getDataView($page) {
     }
     else if ($page == 'divisi') {
         $sql = "SELECT * FROM divisi";
+    }
+    else if ($page == 'roles') {
+        $sql = "SELECT * FROM roles";
+    }
+    else if ($page == 'status') {
+        $sql = "SELECT * FROM status";
+    }
+    else if ($page == 'lokasi') {
+        $sql = "SELECT * FROM lokasi";
     } 
     else {
         return [];
@@ -385,6 +440,12 @@ function getDetailData($type, $id) {
                 WHERE p.id = $id";
     } elseif ($type == 'divisi') {
         $sql = "SELECT id, nama_divisi FROM divisi WHERE id = $id";
+    } elseif ($type == 'roles') {
+        $sql = "SELECT id, nama_roles FROM roles WHERE id = $id";
+    } elseif ($type == 'status') {
+        $sql = "SELECT id, nama_status FROM status WHERE id = $id";
+    } elseif ($type == 'lokasi') {
+        $sql = "SELECT id, nama_lokasi, alamat FROM lokasi WHERE id = $id";
     } else {
         return null; // Jika type tidak dikenali
     }
@@ -440,6 +501,19 @@ function updateData($type, $id, $data) {
     elseif ($type == 'divisi') {
         $nama_divisi = mysqli_real_escape_string($conn, $data['nama_divisi']);
         $sql = "UPDATE divisi SET nama_divisi='$nama_divisi' WHERE id=$id";
+    }
+    else if ($type == 'status') {
+        $nama_status = mysqli_escape_string($conn, $data['nama_status']);
+        $sql = "UPDATE status SET nama_status='$nama_status' WHERE id=$id";
+    }
+    elseif ($type == 'roles') {
+        $nama_roles = mysqli_escape_string($conn, $data['nama_roles']);
+        $sql = "UPDATE roles SET nama_roles='$nama_roles' WHERE id=$id";
+    }
+    elseif ($type == 'lokasi') {
+        $nama_lokasi = mysqli_escape_string($conn, $data['nama_lokasi']);
+        $alamat = mysqli_escape_string($conn, $data['alamat']);
+        $sql = "UPDATE lokasi SET nama_lokasi='$nama_lokasi', alamat='$alamat' WHERE id=$id";
     }
     else {
         return false;

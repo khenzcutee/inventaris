@@ -17,6 +17,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $result = tambahKendaraan($_POST, $_FILES);
     } elseif ($type === 'pemakaian') {
         $result = tambahPemakaian($_POST);
+    } elseif ($type === 'divisi') {
+        $result = tambahDivisi($_POST);
+    } elseif ($type === 'lokasi') {
+        $result = tambahLokasi($_POST);
+    } elseif ($type === 'roles') {
+        $result = tambahRoles($_POST);
+    } elseif ($type === 'status') {
+        $result = tambahStatus($_POST);
     } else {
         $result = false;
     }
@@ -139,6 +147,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <select name="id_status" class="form-select"><?= getStatusOptions(); ?></select>
                         </div>
 
+                    <?php elseif ($type === 'divisi'): ?>
+                        <div class="col-md-6">
+                            <label class="form-label">Nama Divisi</label>
+                            <input type="text" name="nama_divisi" class="form-control">
+                        </div>
+                    
+                    <?php elseif ($type === 'lokasi') : ?>
+                        <div class="col-md-6">
+                            <label class="form-label">Nama Lokasi</label>
+                            <input type="text" name="nama_lokasi" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Alamat Lengkap</label>
+                            <input type="text" name="alamat" class="form-control">
+                        </div>
+                
+                    <?php elseif ($type === 'roles') : ?>
+                        <div class="col-md-6">
+                            <label class="form-label">Nama Roles</label>
+                            <input type="text" name="nama_roles" class="form-control">
+                        </div>
+
+                    <?php elseif ($type === 'status') : ?>
+                        <div class="col-md-6">
+                            <label class="form-label">Nama Status</label>
+                            <input type="text" name="nama_status" class="form-control">
+                        </div>
                     <?php else: ?>
                         <div class="col-12 text-danger">
                             Form tidak tersedia untuk tipe ini.

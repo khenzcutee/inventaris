@@ -23,6 +23,12 @@ if ($page == 'user') {
     $colCount += 4;
 } elseif ($page == 'divisi') {
     $colCount += 1;
+} elseif ($page == 'roles') {
+    $colCount += 1;
+} elseif ($page == 'status') {
+    $colCount += 1;
+} elseif ($page == 'lokasi') {
+    $colCount += 2;
 }
 
 // Handle delete request
@@ -124,6 +130,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['logout'])) {
                                         <td><?= htmlspecialchars($row['nama_status'], ENT_QUOTES, 'UTF-8') ?></td>
                                     <?php elseif ($page == 'divisi'): ?>
                                         <td><?= $row['nama_divisi'] ?></td>
+                                    <?php elseif ($page == 'roles'): ?>
+                                        <td><?= $row['nama_roles'] ?></td>
+                                    <?php elseif ($page == 'status'): ?>
+                                        <td><?= $row['nama_status'] ?></td>
+                                    <?php elseif ($page == 'lokasi'): ?>
+                                        <td><?= $row['nama_lokasi'] ?></td>
+                                        <td><?= $row['alamat'] ?></td>
                                     <?php endif; ?>
                                     <td>
                                         <a href="detail.php?type=<?= $page ?>&id=<?= $row['id'] ?>" class="btn btn-info btn-sm">View</a>

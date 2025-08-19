@@ -148,6 +148,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <label>Nama Divisi</label>
                         <input type="text" name="nama_divisi" class="form-control" value="<?= htmlspecialchars($data['nama_divisi']) ?>" required>
                     </div>
+
+                <?php elseif ($type == 'status'): ?>
+                    <div class="mb-3">
+                        <label>Nama Status</label>
+                        <input type="text" name="nama_status" class="form-control" value="<?= htmlspecialchars($data['nama_status']) ?>" required>
+                    </div>
+
+                <?php elseif ($type == 'roles'): ?>
+                    <div class="mb-3">
+                        <label>Nama Roles</label>
+                        <input type="text" name="nama_roles" class="form-control" value="<?= htmlspecialchars($data['nama_roles']) ?>" required>
+                    </div>
+
+                <?php elseif ($type == 'lokasi'): ?>
+                    <div class="mb-3">
+                        <label>Nama Lokasi</label>
+                        <input type="text" name="nama_lokasi" class="form-control" value="<?= htmlspecialchars($data['nama_lokasi']) ?>" required>
+                    </div>
+                    <div class="mb-3">
+                        <label>Alamat</label>
+                        <input type="text" name="alamat" class="form-control" value="<?= htmlspecialchars($data['alamat']) ?>" required>
+                    </div>
                 <?php endif; ?>
 
                 <button type="submit" class="btn btn-success">Simpan Perubahan</button>
