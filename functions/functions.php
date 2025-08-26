@@ -63,6 +63,66 @@ function getCount($table) {
     return $result['total'];
 }
 
+function getCountPemakaian($table) {
+    global $conn;
+    
+    // Pastikan nama tabel aman (whitelist)
+    $allowedTables = ['pemakaian', 'kendaraan', 'user'];
+    if (!in_array($table, $allowedTables)) {
+        return 0;
+    }
+
+    $sql = "SELECT COUNT(*) as total FROM $table WHERE id_status = 2";
+    $result = mysqli_query($conn, $sql);
+    
+    if ($result) {
+        $row = mysqli_fetch_assoc($result);
+        return (int)$row['total'];
+    }
+    
+    return 0;
+}
+
+function getCountRequest($table) {
+    global $conn;
+    
+    // Pastikan nama tabel aman (whitelist)
+    $allowedTables = ['pemakaian', 'kendaraan', 'user'];
+    if (!in_array($table, $allowedTables)) {
+        return 0;
+    }
+
+    $sql = "SELECT COUNT(*) as total FROM $table WHERE id_status = 6";
+    $result = mysqli_query($conn, $sql);
+    
+    if ($result) {
+        $row = mysqli_fetch_assoc($result);
+        return (int)$row['total'];
+    }
+    
+    return 0;
+}
+
+function getCountKendaraanTersedia($table) {
+    global $conn;
+    
+    // Pastikan nama tabel aman (whitelist)
+    $allowedTables = ['pemakaian', 'kendaraan', 'user'];
+    if (!in_array($table, $allowedTables)) {
+        return 0;
+    }
+
+    $sql = "SELECT COUNT(*) as total FROM $table WHERE id_status = 1";
+    $result = mysqli_query($conn, $sql);
+    
+    if ($result) {
+        $row = mysqli_fetch_assoc($result);
+        return (int)$row['total'];
+    }
+    
+    return 0;
+}
+
 function uploadGambar($fileInputName = 'gambar') {
     // Lokasi folder penyimpanan gambar
     $targetDir = "../assets/images/kendaraan/";
@@ -195,6 +255,50 @@ function getStatusOptions($selectedId = null) {
     return $html;
 }
 
+function getStatusEditOptions($selectedId = null) {
+    global $conn;
+
+    // SESUAIKAN nama kolom PK di tabel status:
+    // Jika di skema kamu PK=status.id, pakai ini:
+    $sql = "SELECT id, nama_status FROM status WHERE id IN (2,3,5) ORDER BY nama_status";
+    // Jika ternyata PK-mu bernama id_status, ganti jadi:
+    // $sql = "SELECT id_status AS id, nama_status FROM status ORDER BY nama_status";
+
+    $res = mysqli_query($conn, $sql);
+    if (!$res) return ''; // atau tangani error sesuai kebutuhan
+
+    $html = '';
+    while ($row = mysqli_fetch_assoc($res)) {
+        $id   = (int)$row['id'];
+        $name = htmlspecialchars($row['nama_status'], ENT_QUOTES, 'UTF-8');
+        $sel  = ($selectedId !== null && (int)$selectedId === $id) ? ' selected' : '';
+        $html .= "<option value=\"{$id}\"{$sel}>{$name}</option>";
+    }
+    return $html;
+}
+
+function getStatusTambahOptions($selectedId = null) {
+    global $conn;
+
+    // SESUAIKAN nama kolom PK di tabel status:
+    // Jika di skema kamu PK=status.id, pakai ini:
+    $sql = "SELECT id, nama_status FROM status WHERE id IN (2) ORDER BY nama_status";
+    // Jika ternyata PK-mu bernama id_status, ganti jadi:
+    // $sql = "SELECT id_status AS id, nama_status FROM status ORDER BY nama_status";
+
+    $res = mysqli_query($conn, $sql);
+    if (!$res) return ''; // atau tangani error sesuai kebutuhan
+
+    $html = '';
+    while ($row = mysqli_fetch_assoc($res)) {
+        $id   = (int)$row['id'];
+        $name = htmlspecialchars($row['nama_status'], ENT_QUOTES, 'UTF-8');
+        $sel  = ($selectedId !== null && (int)$selectedId === $id) ? ' selected' : '';
+        $html .= "<option value=\"{$id}\"{$sel}>{$name}</option>";
+    }
+    return $html;
+}
+
 function getUserOptions($selectedId = null) {
     global $conn;
 
@@ -220,7 +324,7 @@ function getKendaraanOptions($selectedId = null) {
     global $conn;
 
     // Ambil id dan plat nomor sesuai tabel kendaraan
-    $sql = "SELECT id, plat_nomor FROM kendaraan ORDER BY plat_nomor ASC";
+    $sql = "SELECT id, plat_nomor FROM kendaraan WHERE id_status = 1 ORDER BY plat_nomor ASC";
     $res = mysqli_query($conn, $sql);
 
     if (!$res) {
@@ -235,6 +339,63 @@ function getKendaraanOptions($selectedId = null) {
         $html .= "<option value=\"{$id}\"{$sel}>{$plat}</option>";
     }
     return $html;
+}
+
+function getKendaraanOptionsUpdate($selectedId = null) {
+    global $conn;
+
+    $sql = "SELECT id, plat_nomor FROM kendaraan WHERE id_status IN (1, 2, 5) ORDER BY plat_nomor ASC";
+    $res = mysqli_query($conn, $sql);
+
+    if (!$res) {
+        return '';
+    }
+
+    $html = '';
+    while ($row = mysqli_fetch_assoc($res)) {
+        $id   = (int)$row['id'];
+        $plat = htmlspecialchars($row['plat_nomor'], ENT_QUOTES, 'UTF-8');
+        $sel  = ($selectedId !== null && (int)$selectedId === $id) ? ' selected' : '';
+        $html .= "<option value=\"{$id}\"{$sel}>{$plat}</option>";
+    }
+    return $html;
+}
+
+function getKendaraanApprovedList() {
+    global $conn;
+
+    $sql = "SELECT p.id AS request_id, u.nama AS user_nama, k.plat_nomor, k.merek
+            FROM pemakaian p
+            JOIN user u ON p.id_user = u.id
+            JOIN kendaraan k ON p.id_inventaris = k.id
+            WHERE p.id_status = 6
+            ORDER BY p.id DESC";
+
+    $res = mysqli_query($conn, $sql);
+    $data = [];
+    if ($res) {
+        while ($row = mysqli_fetch_assoc($res)) {
+            $data[] = $row;
+        }
+    }
+    return $data;
+}
+
+function getPemakaianSedangDipakaiOptions() {
+    global $conn;
+    $sql = "SELECT p.id, k.plat_nomor, u.nama
+            FROM pemakaian p
+            INNER JOIN kendaraan k ON p.id_inventaris = k.id
+            INNER JOIN `user` u ON p.id_user = u.id
+            WHERE p.id_status = 2";
+    $res = mysqli_query($conn, $sql);
+    $options = '';
+    while ($row = mysqli_fetch_assoc($res)) {
+        $options .= "<option value='{$row['id']}'>
+                        {$row['plat_nomor']} - {$row['nama']}
+                     </option>";
+    }
+    return $options;
 }
 
 function tambahuser($data) {
@@ -254,22 +415,31 @@ function tambahuser($data) {
 
 function tambahKendaraan($data, $files) {
     global $conn;
-    $plat_nomor = htmlspecialchars($data['plat_nomor']);
-    $nomor_stnk = htmlspecialchars($data['nomor_stnk']);
-    $bahan_bakar = htmlspecialchars($data['bahan_bakar']);
-    $warna = htmlspecialchars($data['warna']);
+
+    // Ambil data form dengan sanitasi
+    $plat_nomor      = htmlspecialchars($data['plat_nomor']);
+    $nomor_stnk      = htmlspecialchars($data['nomor_stnk']);
+    $bahan_bakar     = htmlspecialchars($data['bahan_bakar']);
+    $warna           = htmlspecialchars($data['warna']);
     $jenis_kendaraan = htmlspecialchars($data['jenis_kendaraan']);
-    $merek = htmlspecialchars($data['merek']);
-    $kilometer = (int)$data['kilometer'];
-    $id_lokasi = (int)$data['id_lokasi'];
-    $id_status = (int)$data['id_status'];
-    $user_id = $_SESSION['user_id'];
+    $merek           = htmlspecialchars($data['merek']);
+    $kilometer       = (int)$data['kilometer'];
+    $id_lokasi       = (int)$data['id_lokasi'];
+    $id_status       = (int)$data['id_status'];
+    $user_id         = $_SESSION['user_id'];
 
-    // Upload gambar
-    $gambar = uploadGambar($files['gambar']);
+    $gambar = uploadGambar('gambar'); 
+    if ($gambar === false) {
+        return false; // Jika gagal upload, hentikan proses
+    }
 
-    $query = "INSERT INTO kendaraan (plat_nomor, nomor_stnk, bahan_bakar, warna, jenis_kendaraan, merek, kilometer, gambar, id_lokasi, id_status, created_at, updated_at, created_by, updated_by)
-              VALUES ('$plat_nomor', '$nomor_stnk', '$bahan_bakar', '$warna', '$jenis_kendaraan', '$merek', $kilometer, '$gambar', $id_lokasi, $id_status, NOW(), NOW(), $user_id, $user_id)";
+    // ✅ Query Insert
+    $query = "INSERT INTO kendaraan (
+                plat_nomor, nomor_stnk, bahan_bakar, warna, jenis_kendaraan, merek, kilometer, gambar, id_lokasi, id_status, created_at, updated_at, created_by, updated_by
+              ) VALUES (
+                '$plat_nomor', '$nomor_stnk', '$bahan_bakar', '$warna', '$jenis_kendaraan', '$merek', $kilometer, '$gambar', $id_lokasi, $id_status, NOW(), NOW(), $user_id, $user_id
+              )";
+
     return mysqli_query($conn, $query);
 }
 
@@ -279,7 +449,6 @@ function tambahPemakaian($data) {
     $id_user        = (int)$data['id_user'];
     $id_inventaris  = (int)$data['id_inventaris']; // ini harus sesuai dengan id kendaraan
     $tanggal_keluar = mysqli_real_escape_string($conn, $data['tanggal_keluar']);
-    $tanggal_masuk  = mysqli_real_escape_string($conn, $data['tanggal_masuk']);
     $id_status      = (int)$data['id_status']; // status baru untuk kendaraan
     $user_id        = (int)$_SESSION['user_id'];
 
@@ -288,14 +457,14 @@ function tambahPemakaian($data) {
 
     try {
         // 1. Insert ke pemakaian
-        $insertPemakaian = "INSERT INTO pemakaian (id_user, id_inventaris, tanggal_keluar, tanggal_masuk, id_status, created_at, updated_at, created_by, updated_by)
-                            VALUES ($id_user, $id_inventaris, '$tanggal_keluar', '$tanggal_masuk', $id_status, NOW(), NOW(), $user_id, $user_id)";
+        $insertPemakaian = "INSERT INTO pemakaian (id_user, id_inventaris, tanggal_keluar, id_status, created_at, updated_at, created_by, updated_by)
+                            VALUES ($id_user, $id_inventaris, '$tanggal_keluar', 2, NOW(), NOW(), $user_id, $user_id)";
         if (!mysqli_query($conn, $insertPemakaian)) {
             throw new Exception("Gagal menambahkan pemakaian: " . mysqli_error($conn));
         }
 
         // 2. Update status di tabel kendaraan
-        $updateStatus = "UPDATE kendaraan SET id_status = $id_status, updated_at = NOW(), updated_by = $user_id WHERE id = $id_inventaris";
+        $updateStatus = "UPDATE kendaraan SET id_status = 2, updated_at = NOW(), updated_by = $user_id WHERE id = $id_inventaris";
         if (!mysqli_query($conn, $updateStatus)) {
             throw new Exception("Gagal update status kendaraan: " . mysqli_error($conn));
         }
@@ -309,6 +478,138 @@ function tambahPemakaian($data) {
         error_log($e->getMessage());
         return false;
     }
+}
+
+// === FUNGSI REQUEST KENDARAAN ===
+function requestKendaraan($user_id, $id_kendaraan) {
+    global $conn;
+
+    $user_id = (int)$user_id;
+    $id_kendaraan = (int)$id_kendaraan;
+
+    // Cek kendaraan apakah tersedia atau inventaris
+    $cek = mysqli_query($conn, "SELECT id_status FROM kendaraan WHERE id = $id_kendaraan");
+    if (!$cek || mysqli_num_rows($cek) === 0) return false;
+
+    $row = mysqli_fetch_assoc($cek);
+    if (!in_array((int)$row['id_status'], [1, 3])) {
+        return 'not_available'; // kendaraan tidak bisa di-request
+    }
+
+    mysqli_begin_transaction($conn);
+
+    // Insert ke pemakaian dengan status Request (6)
+    $sql1 = "INSERT INTO pemakaian (id_user, id_inventaris, tanggal_keluar, tanggal_masuk, id_status, created_at, updated_at, created_by, updated_by)
+             VALUES ($user_id, $id_kendaraan, CURDATE(), '0000-00-00', 6, NOW(), NOW(), $user_id, $user_id)";
+    if (!mysqli_query($conn, $sql1)) {
+        mysqli_rollback($conn);
+        return false;
+    }
+
+    // Update status kendaraan ke Request (6)
+    $sql2 = "UPDATE kendaraan SET id_status = 6 WHERE id = $id_kendaraan";
+    if (!mysqli_query($conn, $sql2)) {
+        mysqli_rollback($conn);
+        return false;
+    }
+
+    mysqli_commit($conn);
+    return true;
+}
+
+// === FUNGSI APPROVE REQUEST ===
+function approveRequest($id_request) {
+    global $conn;
+    $id_request = (int)$id_request;
+
+    mysqli_begin_transaction($conn);
+
+    // Update status pemakaian menjadi Sedang Dipakai (2)
+    $sql1 = "UPDATE pemakaian SET id_status = 2 WHERE id = $id_request";
+    if (!mysqli_query($conn, $sql1)) {
+        mysqli_rollback($conn);
+        return false;
+    }
+
+    // Ambil id_inventaris
+    $q = mysqli_query($conn, "SELECT id_inventaris FROM pemakaian WHERE id = $id_request");
+    $d = mysqli_fetch_assoc($q);
+    $id_kendaraan = (int)$d['id_inventaris'];
+
+    // Update kendaraan menjadi Sedang Dipakai (2)
+    $sql2 = "UPDATE kendaraan SET id_status = 2 WHERE id = $id_kendaraan";
+    if (!mysqli_query($conn, $sql2)) {
+        mysqli_rollback($conn);
+        return false;
+    }
+
+    mysqli_commit($conn);
+    return true;
+}
+
+// === FUNGSI TOLAK REQUEST ===
+function rejectRequest($id_request) {
+    global $conn;
+    $id_request = (int)$id_request;
+
+    mysqli_begin_transaction($conn);
+
+    // Ambil id_inventaris
+    $q = mysqli_query($conn, "SELECT id_inventaris FROM pemakaian WHERE id = $id_request");
+    if (!$q || mysqli_num_rows($q) === 0) {
+        mysqli_rollback($conn);
+        return false;
+    }
+    $d = mysqli_fetch_assoc($q);
+    $id_kendaraan = (int)$d['id_inventaris'];
+
+    // Set Status Menjadi Ditolak
+    $sql1 = "UPDATE pemakaian SET id_status = 7 WHERE id = $id_request";
+    if (!mysqli_query($conn, $sql1)) {
+        mysqli_rollback($conn);
+        return false;
+    }
+
+    // Update kendaraan menjadi Tersedia (1)
+    $sql2 = "UPDATE kendaraan SET id_status = 1 WHERE id = $id_kendaraan";
+    if (!mysqli_query($conn, $sql2)) {
+        mysqli_rollback($conn);
+        return false;
+    }
+
+    mysqli_commit($conn);
+    return true;
+}
+
+function prosesPengembalian($id_pemakaian, $tanggal_masuk) {
+    global $conn;
+    mysqli_begin_transaction($conn);
+
+    // Ambil id kendaraan
+    $q = mysqli_query($conn, "SELECT id_inventaris FROM pemakaian WHERE id=$id_pemakaian");
+    if (!$q || mysqli_num_rows($q) === 0) {
+        mysqli_rollback($conn);
+        return false;
+    }
+    $row = mysqli_fetch_assoc($q);
+    $id_kendaraan = (int)$row['id_inventaris'];
+
+    // Update pemakaian (tanggal_masuk + status selesai = 5)
+    $sql1 = "UPDATE pemakaian SET tanggal_masuk='$tanggal_masuk', id_status=5 WHERE id=$id_pemakaian";
+    if (!mysqli_query($conn, $sql1)) {
+        mysqli_rollback($conn);
+        return false;
+    }
+
+    // Update kendaraan jadi Tersedia (status = 1)
+    $sql2 = "UPDATE kendaraan SET id_status=1 WHERE id=$id_kendaraan";
+    if (!mysqli_query($conn, $sql2)) {
+        mysqli_rollback($conn);
+        return false;
+    }
+
+    mysqli_commit($conn);
+    return true;
 }
 
 function tambahDivisi($data) {
@@ -380,7 +681,16 @@ function getDataView($page) {
             FROM pemakaian p
             INNER JOIN `user` u ON p.id_user = u.id
             INNER JOIN kendaraan k ON p.id_inventaris = k.id
-            INNER JOIN status s ON p.id_status = s.id";
+            INNER JOIN status s ON p.id_status = s.id
+            WHERE p.id_status NOT IN (5,7,6)";
+    }
+    else if ($page == 'pemakaianSelesai') {
+    $sql = "SELECT p.id, u.nama AS nama_user, k.plat_nomor, p.tanggal_keluar, p.tanggal_masuk, s.nama_status
+            FROM pemakaian p
+            INNER JOIN `user` u ON p.id_user = u.id
+            INNER JOIN kendaraan k ON p.id_inventaris = k.id
+            INNER JOIN status s ON p.id_status = s.id
+            WHERE p.id_status IN (5,7)";
     }
     else if ($page == 'divisi') {
         $sql = "SELECT * FROM divisi";
@@ -438,6 +748,14 @@ function getDetailData($type, $id) {
                 INNER JOIN kendaraan k ON p.id_inventaris = k.id
                 INNER JOIN status s ON p.id_status = s.id
                 WHERE p.id = $id";
+    } elseif ($type == 'pemakaianSelesai') {
+        $sql = "SELECT p.id, u.nama AS nama_user, k.plat_nomor, p.tanggal_keluar, p.tanggal_masuk, 
+                       s.nama_status, p.created_at, p.updated_at
+                FROM pemakaian p
+                INNER JOIN `user` u ON p.id_user = u.id
+                INNER JOIN kendaraan k ON p.id_inventaris = k.id
+                INNER JOIN status s ON p.id_status = s.id
+                WHERE p.id = $id";
     } elseif ($type == 'divisi') {
         $sql = "SELECT id, nama_divisi FROM divisi WHERE id = $id";
     } elseif ($type == 'roles') {
@@ -461,65 +779,127 @@ function updateData($type, $id, $data) {
     global $conn;
     $id = (int)$id;
 
-    if ($type == 'user') {
-        $nama = mysqli_real_escape_string($conn, $data['nama']);
-        $username = mysqli_real_escape_string($conn, $data['username']);
+    // --- USER ---
+    if ($type === 'user') {
+        $nama      = mysqli_real_escape_string($conn, $data['nama']);
+        $username  = mysqli_real_escape_string($conn, $data['username']);
         $id_divisi = (int)$data['id_divisi'];
-        $id_roles = (int)$data['id_roles'];
+        $id_roles  = (int)$data['id_roles'];
 
-        $sql = "UPDATE `user` 
-                SET nama='$nama', username='$username', id_divisi=$id_divisi, id_roles=$id_roles 
+        $sql = "UPDATE `user`
+                SET nama='$nama', username='$username', id_divisi=$id_divisi, id_roles=$id_roles
                 WHERE id=$id";
+        return mysqli_query($conn, $sql);
     }
-    elseif ($type == 'kendaraan') {
-        $plat_nomor = mysqli_real_escape_string($conn, $data['plat_nomor']);
-        $nomor_stnk = mysqli_real_escape_string($conn, $data['nomor_stnk']);
-        $bahan_bakar = mysqli_real_escape_string($conn, $data['bahan_bakar']);
-        $warna = mysqli_real_escape_string($conn, $data['warna']);
+
+    // --- KENDARAAN ---
+    if ($type === 'kendaraan') {
+        $plat_nomor      = mysqli_real_escape_string($conn, $data['plat_nomor']);
+        $nomor_stnk      = mysqli_real_escape_string($conn, $data['nomor_stnk']);
+        $bahan_bakar     = mysqli_real_escape_string($conn, $data['bahan_bakar']);
+        $warna           = mysqli_real_escape_string($conn, $data['warna']);
         $jenis_kendaraan = mysqli_real_escape_string($conn, $data['jenis_kendaraan']);
-        $merek = mysqli_real_escape_string($conn, $data['merek']);
-        $kilometer = (int)$data['kilometer'];
-        $id_lokasi = (int)$data['id_lokasi'];
-        $id_status = (int)$data['id_status'];
+        $merek           = mysqli_real_escape_string($conn, $data['merek']);
+        $kilometer       = (int)$data['kilometer'];
+        $id_lokasi       = (int)$data['id_lokasi'];
+        $id_status       = (int)$data['id_status']; // pastikan 1..3
 
-        $sql = "UPDATE kendaraan 
-                SET plat_nomor='$plat_nomor', nomor_stnk='$nomor_stnk', bahan_bakar='$bahan_bakar', warna='$warna', 
-                    jenis_kendaraan='$jenis_kendaraan', merek='$merek', kilometer=$kilometer, id_lokasi=$id_lokasi, id_status=$id_status
+        $sql = "UPDATE kendaraan
+                SET plat_nomor='$plat_nomor', nomor_stnk='$nomor_stnk', bahan_bakar='$bahan_bakar', warna='$warna',
+                    jenis_kendaraan='$jenis_kendaraan', merek='$merek', kilometer=$kilometer,
+                    id_lokasi=$id_lokasi, id_status=$id_status
                 WHERE id=$id";
+        return mysqli_query($conn, $sql);
     }
-    elseif ($type == 'pemakaian') {
-        $id_user = (int)$data['id_user'];
-        $id_inventaris = (int)$data['id_inventaris'];
-        $tanggal_keluar = mysqli_real_escape_string($conn, $data['tanggal_keluar']);
-        $tanggal_masuk = mysqli_real_escape_string($conn, $data['tanggal_masuk']);
-        $id_status = (int)$data['id_status'];
 
-        $sql = "UPDATE pemakaian 
-                SET id_user=$id_user, id_inventaris=$id_inventaris, tanggal_keluar='$tanggal_keluar', tanggal_masuk='$tanggal_masuk', id_status=$id_status
-                WHERE id=$id";
+    // --- PEMAKAIAN ---
+    elseif ($type === 'pemakaian') {
+    // Ambil data lama untuk validasi
+    $q = mysqli_query($conn, "SELECT id_inventaris, tanggal_keluar, tanggal_masuk, id_status
+                               FROM pemakaian WHERE id=$id");
+    if (!$q || mysqli_num_rows($q) === 0) {
+        return false; // Data tidak ditemukan
     }
-    elseif ($type == 'divisi') {
-        $nama_divisi = mysqli_real_escape_string($conn, $data['nama_divisi']);
-        $sql = "UPDATE divisi SET nama_divisi='$nama_divisi' WHERE id=$id";
+    $old = mysqli_fetch_assoc($q);
+    $id_inventaris = (int)$old['id_inventaris'];
+    $statusLama    = (int)$old['id_status'];
+
+    // Jika status lama = 5 → tidak boleh edit
+    if ($statusLama === 5) {
+        return 'not_allowed'; // Kembalikan flag khusus
     }
-    else if ($type == 'status') {
-        $nama_status = mysqli_escape_string($conn, $data['nama_status']);
-        $sql = "UPDATE status SET nama_status='$nama_status' WHERE id=$id";
-    }
-    elseif ($type == 'roles') {
-        $nama_roles = mysqli_escape_string($conn, $data['nama_roles']);
-        $sql = "UPDATE roles SET nama_roles='$nama_roles' WHERE id=$id";
-    }
-    elseif ($type == 'lokasi') {
-        $nama_lokasi = mysqli_escape_string($conn, $data['nama_lokasi']);
-        $alamat = mysqli_escape_string($conn, $data['alamat']);
-        $sql = "UPDATE lokasi SET nama_lokasi='$nama_lokasi', alamat='$alamat' WHERE id=$id";
-    }
-    else {
+
+    // Lanjutkan update
+    $new_status = isset($data['id_status']) ? (int)$data['id_status'] : 2;
+
+    if ($new_status === 5) $new_status = 1;
+
+    if (!in_array($new_status, [1,2,3], true)) {
         return false;
     }
 
-    return mysqli_query($conn, $sql);
+    mysqli_begin_transaction($conn);
+
+    // Tentukan tanggal_masuk
+    if (!empty($data['tanggal_masuk'])) {
+        $tanggal_masuk = mysqli_real_escape_string($conn, $data['tanggal_masuk']);
+    } else {
+        $tanggal_masuk = ($new_status === 2)
+            ? mysqli_real_escape_string($conn, $old['tanggal_masuk'])
+            : date('Y-m-d');
+    }
+
+    // Update pemakaian
+    $sql1 = "UPDATE pemakaian
+             SET id_status=$new_status, tanggal_masuk='$tanggal_masuk'
+             WHERE id=$id";
+    if (!mysqli_query($conn, $sql1)) {
+        mysqli_rollback($conn);
+        return false;
+    }
+
+    // Update status kendaraan
+    $kend_status = ($new_status === 2) ? 2 : 1;
+    $sql2 = "UPDATE kendaraan SET id_status=$kend_status WHERE id=$id_inventaris";
+    if (!mysqli_query($conn, $sql2)) {
+        mysqli_rollback($conn);
+        return false;
+    }
+
+    mysqli_commit($conn);
+    return true;
+}
+
+    // --- DIVISI ---
+    if ($type === 'divisi') {
+        $nama_divisi = mysqli_real_escape_string($conn, $data['nama_divisi']);
+        $sql = "UPDATE divisi SET nama_divisi='$nama_divisi' WHERE id=$id";
+        return mysqli_query($conn, $sql);
+    }
+
+    // --- STATUS ---
+    if ($type === 'status') {
+        $nama_status = mysqli_real_escape_string($conn, $data['nama_status']);
+        $sql = "UPDATE status SET nama_status='$nama_status' WHERE id=$id";
+        return mysqli_query($conn, $sql);
+    }
+
+    // --- ROLES ---
+    if ($type === 'roles') {
+        $nama_roles = mysqli_real_escape_string($conn, $data['nama_roles']);
+        $sql = "UPDATE roles SET nama_roles='$nama_roles' WHERE id=$id";
+        return mysqli_query($conn, $sql);
+    }
+
+    // --- LOKASI ---
+    if ($type === 'lokasi') {
+        $nama_lokasi = mysqli_real_escape_string($conn, $data['nama_lokasi']);
+        $alamat      = mysqli_real_escape_string($conn, $data['alamat']);
+        $sql = "UPDATE lokasi SET nama_lokasi='$nama_lokasi', alamat='$alamat' WHERE id=$id";
+        return mysqli_query($conn, $sql);
+    }
+
+    return false;
 }
 
 function deleteData($type, $id) {
@@ -528,23 +908,78 @@ function deleteData($type, $id) {
 
     if ($type === 'user') {
         $sql = "DELETE FROM user WHERE id = $id";
-    } elseif ($type === 'kendaraan') {
+        $ok  = mysqli_query($conn, $sql);
+        return $ok && mysqli_affected_rows($conn) > 0 ? true : false;
+
+    } else if ($type === 'kendaraan') {
         $sql = "DELETE FROM kendaraan WHERE id = $id";
-    } elseif ($type === 'pemakaian') {
+        $ok  = mysqli_query($conn, $sql);
+        return $ok && mysqli_affected_rows($conn) > 0 ? true : false;
+
+    } else if ($type === 'pemakaian') {
+    // Ambil id_status & id_inventaris sebelum hapus
+    $cek = mysqli_query($conn, "SELECT id_status, id_inventaris FROM pemakaian WHERE id = $id");
+    if (!$cek || mysqli_num_rows($cek) === 0) {
+        return false; // Data tidak ada
+    }
+    $row = mysqli_fetch_assoc($cek);
+    $id_status = (int)$row['id_status'];
+    $id_inventaris = (int)$row['id_inventaris'];
+
+    // Jika status selesai (5), tidak boleh hapus
+    if ($id_status === 5) {
+        return 'not_allowed';
+    }
+
+    // Hapus pemakaian
+    $sql = "DELETE FROM pemakaian WHERE id = $id";
+    if (mysqli_query($conn, $sql) && mysqli_affected_rows($conn) > 0) {
+        // Setelah berhasil hapus, update status kendaraan menjadi 1 (Tersedia)
+        $updateKendaraan = "UPDATE kendaraan SET id_status = 1 WHERE id = $id_inventaris";
+        mysqli_query($conn, $updateKendaraan);
+        return true;
+    }
+
+    return false;
+
+    } else if ($type === 'pemakaianSelesai') {
+        // Cek status dulu
+        $cek = mysqli_query($conn, "SELECT id_status FROM pemakaian WHERE id = $id");
+        if (!$cek || mysqli_num_rows($cek) === 0) {
+            return false; // data tidak ada
+        }
+        $row = mysqli_fetch_assoc($cek);
+        if ((int)$row['id_status'] === 5 || 7) {
+            return 'not_allowed'; // status Selesai → tidak boleh hapus
+        }
+
         $sql = "DELETE FROM pemakaian WHERE id = $id";
-    } elseif ($type === 'divisi') {
+        $ok  = mysqli_query($conn, $sql);
+        return $ok && mysqli_affected_rows($conn) > 0 ? true : false;
+
+    } else if ($type === 'divisi') {
         $sql = "DELETE FROM divisi WHERE id = $id";
-    } elseif ($type === 'lokasi') {
+        $ok  = mysqli_query($conn, $sql);
+        return $ok && mysqli_affected_rows($conn) > 0 ? true : false;
+
+    } else if ($type === 'lokasi') {
         $sql = "DELETE FROM lokasi WHERE id = $id";
-    } elseif ($type === 'roles') {
+        $ok  = mysqli_query($conn, $sql);
+        return $ok && mysqli_affected_rows($conn) > 0 ? true : false;
+
+    } else if ($type === 'roles') {
         $sql = "DELETE FROM roles WHERE id = $id";
-    } elseif ($type === 'status') {
+        $ok  = mysqli_query($conn, $sql);
+        return $ok && mysqli_affected_rows($conn) > 0 ? true : false;
+
+    } else if ($type === 'status') {
         $sql = "DELETE FROM status WHERE id = $id";
+        $ok  = mysqli_query($conn, $sql);
+        return $ok && mysqli_affected_rows($conn) > 0 ? true : false;
+
     } else {
         return false;
     }
-
-    return mysqli_query($conn, $sql);
 }
 
 function login($data) {
@@ -553,7 +988,7 @@ function login($data) {
     $username = trim($data['username']);
     $password = trim($data['password']);
 
-    $stmt = $conn->prepare("SELECT id, username, password FROM user WHERE username = ?");
+    $stmt = $conn->prepare("SELECT id, username, password, id_roles FROM user WHERE username = ?");
     $stmt->bind_param("s", $username);
     $stmt->execute();
 
@@ -567,6 +1002,7 @@ function login($data) {
             $_SESSION['logged_in'] = true;
             $_SESSION['user_id'] = $row['id'];
             $_SESSION['username'] = $row['username'];
+            $_SESSION['id_roles'] = $row['id_roles'];
             return true;
         }
     }

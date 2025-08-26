@@ -23,11 +23,32 @@ if (!$data) {
 
 // Proses update
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (updateData($type, $id, $_POST)) {
-        echo "<script>alert('Data berhasil diupdate!');window.location='view_Data.php?type=$type';</script>";
+    $result = updateData($type, $id, $_POST);
+
+    if ($result === true) {
+        $_SESSION['flash'] = [
+            'icon'  => 'success',
+            'title' => 'Berhasil',
+            'text'  => 'Data berhasil diupdate.'
+        ];
+        header("Location: edit.php?type=$type&id=$id");
+        exit;
+    } elseif ($result === 'not_allowed') {
+        $_SESSION['flash'] = [
+            'icon'  => 'warning',
+            'title' => 'Tidak Bisa Diubah',
+            'text'  => 'Pemakaian Yang Sudah Selesai Tidak Dapat di Edit Kembali'
+        ];
+        header("Location: edit.php?type=$type&id=$id");
         exit;
     } else {
-        echo "<script>alert('Gagal update data!');</script>";
+        $_SESSION['flash'] = [
+            'icon'  => 'error',
+            'title' => 'Gagal',
+            'text'  => 'Gagal mengubah data.'
+        ];
+        header("Location: edit.php?type=$type&id=$id");
+        exit;
     }
 }
 ?>
@@ -116,17 +137,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
 
                 <?php elseif ($type == 'pemakaian'): ?>
+                    <!-- Tampilkan informasi agar user tahu -->
                     <div class="mb-3">
                         <label>User</label>
-                        <select name="id_user" class="form-control">
-                            <?= getUserOptions($data['id_user']); ?>
-                        </select>
+                        <input type="text" class="form-control" value="<?= htmlspecialchars($data['nama_user']) ?>" disabled>
+                        <input type="hidden" name="id_user" value="<?= isset($data['id_user']) ? (int)$data['id_user'] : 0 ?>">
                     </div>
                     <div class="mb-3">
                         <label>Kendaraan</label>
-                        <select name="id_inventaris" class="form-control">
-                            <?= getKendaraanOptions($data['id_inventaris']); ?>
-                        </select>
+                        <input type="text" class="form-control" value="<?= htmlspecialchars($data['plat_nomor']) ?>" disabled>
+                        <input type="hidden" name="id_inventaris" value="<?= isset($data['id_inventaris']) ? (int)$data['id_inventaris'] : 0 ?>">
                     </div>
                     <div class="mb-3">
                         <label>Tanggal Keluar</label>
@@ -138,11 +158,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
                     <div class="mb-3">
                         <label>Status</label>
-                        <select name="id_status" class="form-control">
-                            <?= getStatusOptions($data['id_status']); ?>
+                        <select name="id_status" class="form-control" value="<?= isset($data['id_status']) ?>">
+                            <?=getStatusEditOptions($data['nama_status']);?>
                         </select>
                     </div>
-
+                    
                 <?php elseif ($type == 'divisi'): ?>
                     <div class="mb-3">
                         <label>Nama Divisi</label>
@@ -177,5 +197,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </div>
 </div>
+<?php include "script.php"; ?>
 </body>
 </html>

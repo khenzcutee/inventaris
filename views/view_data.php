@@ -21,6 +21,8 @@ if ($page == 'user') {
     $colCount += 9;
 } elseif ($page == 'pemakaian') {
     $colCount += 4;
+} elseif ($page == 'pemakaianSelesai') {
+    $colCount += 4;
 } elseif ($page == 'divisi') {
     $colCount += 1;
 } elseif ($page == 'roles') {
@@ -31,16 +33,35 @@ if ($page == 'user') {
     $colCount += 2;
 }
 
-// Handle delete request
-if (isset($_GET['delete']) && isset($_GET['id']) && isset($_GET['type'])) {
+// Handle delete request (PRG + flash)
+if (isset($_GET['delete'], $_GET['id'], $_GET['type'])) {
     $deleteType = $_GET['type'];
-    $deleteId = (int)$_GET['id'];
+    $deleteId   = (int)$_GET['id'];
 
-    if (deleteData($deleteType, $deleteId)) {
-        echo "<script>alert('Data berhasil dihapus!'); window.location='view_Data.php?type=$deleteType';</script>";
+    $result = deleteData($deleteType, $deleteId);
+
+    if ($result === true) {
+        $_SESSION['flash'] = [
+            'icon'  => 'success',
+            'title' => 'Berhasil',
+            'text'  => 'Data berhasil dihapus.'
+        ];
+    } else if ($result === 'not_allowed') {
+        $_SESSION['flash'] = [
+            'icon'  => 'warning',
+            'title' => 'Tidak Bisa Dihapus',
+            'text'  => 'Pemakaian Yang Sudah Selesai Tidak Dapat Dihapus.'
+        ];
     } else {
-        echo "<script>alert('Gagal menghapus data!');</script>";
+        $_SESSION['flash'] = [
+            'icon'  => 'error',
+            'title' => 'Gagal',
+            'text'  => 'Terjadi kesalahan saat menghapus data.'
+        ];
     }
+
+    header("Location: view_Data.php?type=" . urlencode($deleteType));
+    exit;
 }
 
 // Logout
@@ -61,16 +82,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['logout'])) {
 
 <?php include "navbar.php"; ?>
 <?php include "sidebar.php"; ?>
-
 <!-- Main Content -->
 <div class="col-md-10 p-4">
     <h2 class="mb-4 text-primary">📄 Data <?= ucfirst($page) ?></h2>
 
     <div class="card mb-4">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <span>Daftar <?= ucfirst($page) ?></span>
-            <a href="tambah.php?type=<?= $page ?>" class="btn btn-primary btn-sm">+ Tambah <?= ucfirst($page) ?></a>
-        </div>
+    <span>Daftar <?= ucfirst($page) ?></span>
+    <div class="btn-group">
+        <!-- Tombol History -->
+        <a href="view_Data.php?type=pemakaianSelesai" class="btn btn-secondary btn-sm">
+            History
+        </a>
+        <!-- Tombol Pengembalian -->
+        <a href="pengembalian.php" class="btn btn-primary btn-sm">
+            Pengembalian
+        </a>
+        <!-- Tombol Tambah -->
+        <a href="tambah.php?type=<?= $page ?>" class="btn btn-success btn-sm">
+            + Tambah <?= ucfirst($page) ?>
+        </a>
+    </div>
+</div>
+
         <div class="card-body">
             <div class="table-responsive">
                 <table class="table table-striped table-bordered align-middle">
@@ -94,7 +128,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['logout'])) {
                                 <th>Status</th>
                             <?php elseif ($page == 'pemakaian'): ?>
                                 <th>Tanggal</th>
-                                <th>Pengguna</th>
+                                <th>Peminjam</th>
+                                <th>Plat Nomor</th>
+                                <th>Status</th>
+                            <?php elseif ($page == 'pemakaianSelesai'): ?>
+                                <th>Tanggal Keluar</th>
+                                <th>Tanggal Masuk</th>
+                                <th>Peminjam</th>
                                 <th>Plat Nomor</th>
                                 <th>Status</th>
                             <?php elseif ($page == 'divisi'): ?>
@@ -128,6 +168,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['logout'])) {
                                         <td><?= htmlspecialchars($row['nama_user'], ENT_QUOTES, 'UTF-8') ?></td>
                                         <td><?= htmlspecialchars($row['plat_nomor'], ENT_QUOTES, 'UTF-8') ?></td>
                                         <td><?= htmlspecialchars($row['nama_status'], ENT_QUOTES, 'UTF-8') ?></td>
+                                    <?php elseif ($page == 'pemakaianSelesai'): ?>
+                                        <td><?= htmlspecialchars($row['tanggal_keluar'], ENT_QUOTES, 'UTF-8') ?></td>
+                                        <td><?= htmlspecialchars($row['tanggal_masuk'], ENT_QUOTES, 'UTF-8') ?></td>
+                                        <td><?= htmlspecialchars($row['nama_user'], ENT_QUOTES, 'UTF-8') ?></td>
+                                        <td><?= htmlspecialchars($row['plat_nomor'], ENT_QUOTES, 'UTF-8') ?></td>
+                                        <td><?= htmlspecialchars($row['nama_status'], ENT_QUOTES, 'UTF-8') ?></td>
                                     <?php elseif ($page == 'divisi'): ?>
                                         <td><?= $row['nama_divisi'] ?></td>
                                     <?php elseif ($page == 'roles'): ?>
@@ -139,9 +185,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['logout'])) {
                                         <td><?= $row['alamat'] ?></td>
                                     <?php endif; ?>
                                     <td>
-                                        <a href="detail.php?type=<?= $page ?>&id=<?= $row['id'] ?>" class="btn btn-info btn-sm">View</a>
-                                        <a href="edit.php?type=<?= $page ?>&id=<?= $row['id'] ?>" class="btn btn-warning btn-sm">Edit</a>
-                                        <a href="view_Data.php?type=<?= $page ?>&delete=1&id=<?= $row['id'] ?>" class="btn btn-danger btn-sm" onclick="return confirm('Yakin ingin hapus?')">Hapus</a>
+                                        <!-- Tombol View selalu aktif -->
+                                        <a href="detail.php?type=<?= $page ?>&id=<?= $row['id'] ?>" 
+                                        class="btn btn-info btn-sm">View</a>
+
+                                        <?php if ($page == 'pemakaianSelesai' || $page == 'pemakaian') : ?>
+                                            <!-- Jika status = 5 (Selesai) => Edit disabled -->
+                                            <a href="#"
+                                            class="btn btn-warning btn-sm btn-edit-disabled"
+                                            data-title="Tidak Bisa Edit!"
+                                            data-text="Pemakaian Tidak Dapat Di Edit!">
+                                            Edit
+                                            </a>
+                                        <?php else: ?>
+                                            <!-- Jika status bukan 5 => Edit normal -->
+                                            <a href="edit.php?type=<?= $page ?>&id=<?= $row['id'] ?>" 
+                                            class="btn btn-warning btn-sm">Edit</a>
+                                        <?php endif; ?>
+
+                                        <!-- Tombol Hapus -->
+                                        <a href="view_Data.php?type=<?= $page ?>&delete=1&id=<?= $row['id'] ?>" 
+                                        class="btn btn-danger btn-sm btn-delete">Hapus</a>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -154,7 +218,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['logout'])) {
         </div>
     </div>
 </div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<?php include "script.php"; ?>
 </body>
 </html>

@@ -14,9 +14,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['logout'])) {
 
 // Hitung jumlah data di tiap tabel
 $jumlahDivisi    = getCount('divisi');
-$jumlahKendaraan = getCount('kendaraan');
-$jumlahLokasi    = getCount('lokasi');
+$jumlahKendaraanTersedia = getCountKendaraanTersedia('kendaraan');
+$jumlahRequest   = getCountRequest('pemakaian');
 $jumlahUser      = getCount('user');
+$jumlahPemakaian = getCountPemakaian('pemakaian');
 
 // Data kendaraan
 $kendaraan = getKendaraanLengkap();
@@ -79,26 +80,26 @@ $pemakaian = getPemakaianLengkap();
             <div class="card text-center stats-card">
                 <div class="card-header">Kendaraan</div>
                 <div class="card-body">
-                    <h3 class="text-primary"><?= $jumlahKendaraan ?></h3>
-                    <p class="text-muted">Total Kendaraan</p>
+                    <h3 class="text-primary"><?= $jumlahKendaraanTersedia ?></h3>
+                    <p class="text-muted">Kendaraan Yang Tersedia</p>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
             <div class="card text-center stats-card">
-                <div class="card-header">Lokasi</div>
+                <div class="card-header">Request</div>
                 <div class="card-body">
-                    <h3 class="text-primary"><?= $jumlahLokasi ?></h3>
-                    <p class="text-muted">Total Lokasi</p>
+                    <h3 class="text-primary"><?= $jumlahRequest?></h3>
+                    <p class="text-muted">Total Request</p>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
             <div class="card text-center stats-card">
-                <div class="card-header">User</div>
+                <div class="card-header">Pemakaian</div>
                 <div class="card-body">
-                    <h3 class="text-primary"><?= $jumlahUser ?></h3>
-                    <p class="text-muted">Total User</p>
+                    <h3 class="text-primary"><?= $jumlahPemakaian ?></h3>
+                    <p class="text-muted">Pemakaian Aktif</p>
                 </div>
             </div>
         </div>

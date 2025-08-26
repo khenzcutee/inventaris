@@ -139,12 +139,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <input type="date" name="tanggal_keluar" class="form-control" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Tanggal Masuk</label>
-                            <input type="date" name="tanggal_masuk" class="form-control">
-                        </div>
-                        <div class="col-md-6">
                             <label class="form-label">Status</label>
-                            <select name="id_status" class="form-select"><?= getStatusOptions(); ?></select>
+                            <select name="id_status" class="form-select"><?= getStatusTambahOptions(); ?></select>
                         </div>
 
                     <?php elseif ($type === 'divisi'): ?>
@@ -189,6 +185,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </div>
 </div>
+<?php include "script.php"; ?>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

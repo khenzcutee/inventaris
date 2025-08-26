@@ -25,6 +25,15 @@
                     <a class="nav-link" href="view_Data.php?type=pemakaian">Pemakaian</a>
                 </li>
                 <li class="nav-item">
+                    <a class="nav-link" href="view_Data.php?type=pemakaianSelesai">History Pemakaian</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="request.php">Request</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="approved.php">Approval</a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link" href="view_Data.php?type=roles">Roles</a>
                 </li>
                 <li class="nav-item">
