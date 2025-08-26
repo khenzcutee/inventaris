@@ -10,8 +10,11 @@ if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['id_roles'], [3,4])) {
 // Approve Request
 if (isset($_GET['approve'])) {
     $id = (int)$_GET['approve'];
-    if (approveRequest($id)) {
+    $result = approveRequest($id);
+    if ($result === true) {
         $_SESSION['flash'] = ['icon'=>'success','title'=>'Berhasil','text'=>'Request disetujui!'];
+    } elseif ($result === 'not_available') {
+        $_SESSION['flash'] = ['icon'=>'warning','title'=>'Gagal','text'=>'Kendaraan Sedang Digunakan!'];
     } else {
         $_SESSION['flash'] = ['icon'=>'error','title'=>'Gagal','text'=>'Tidak dapat approve request!'];
     }
@@ -31,7 +34,7 @@ if (isset($_GET['reject'])) {
     exit;
 }
 
-$requests = getKendaraanApprovedList();
+$requests = getKendaraanRequestPending();
 ?>
 <!DOCTYPE html>
 <html lang="id">

@@ -361,15 +361,15 @@ function getKendaraanOptionsUpdate($selectedId = null) {
     return $html;
 }
 
-function getKendaraanApprovedList() {
+function getKendaraanRequestPending() {
     global $conn;
 
-    $sql = "SELECT p.id AS request_id, u.nama AS user_nama, k.plat_nomor, k.merek
-            FROM pemakaian p
-            JOIN user u ON p.id_user = u.id
-            JOIN kendaraan k ON p.id_inventaris = k.id
-            WHERE p.id_status = 6
-            ORDER BY p.id DESC";
+    $sql = "SELECT r.id AS request_id, u.nama AS user_nama, k.plat_nomor, k.merek
+            FROM request r
+            JOIN user u ON r.id_user = u.id
+            JOIN kendaraan k ON r.id_kendaraan = k.id
+            WHERE r.id_status = 8  -- Pending
+            ORDER BY r.id DESC";
 
     $res = mysqli_query($conn, $sql);
     $data = [];
@@ -379,6 +379,47 @@ function getKendaraanApprovedList() {
         }
     }
     return $data;
+}
+
+function getKendaraanRequestList($selectedId = null) {
+    global $conn;
+
+    // Ambil kendaraan yang tersedia (status 1 = Tersedia)
+    $sql = "SELECT id, plat_nomor, merek, jenis_kendaraan FROM kendaraan ORDER BY plat_nomor ASC";
+    $res = mysqli_query($conn, $sql);
+
+    $html = '';
+    if ($res) {
+        while ($row = mysqli_fetch_assoc($res)) {
+            $id   = (int)$row['id'];
+            $plat = htmlspecialchars($row['plat_nomor'], ENT_QUOTES, 'UTF-8');
+            $merek = htmlspecialchars($row['merek'], ENT_QUOTES, 'UTF-8');
+            $jenis = htmlspecialchars($row['jenis_kendaraan'], ENT_QUOTES, 'UTF-8');
+
+            $sel = ($selectedId !== null && (int)$selectedId === $id) ? ' selected' : '';
+            $html .= "<option value=\"$id\"$sel>$plat - $merek ($jenis)</option>";
+        }
+    }
+    return $html;
+}
+
+function getAllKendaraanOptions($selectedId = null) {
+    global $conn;
+    $sql = "SELECT id, plat_nomor, merek, jenis_kendaraan FROM kendaraan ORDER BY plat_nomor ASC";
+    $res = mysqli_query($conn, $sql);
+
+    $html = '';
+    if ($res) {
+        while ($row = mysqli_fetch_assoc($res)) {
+            $id = (int)$row['id'];
+            $sel = ($selectedId !== null && $selectedId == $id) ? ' selected' : '';
+            $html .= "<option value='{$id}'{$sel}>"
+                  . htmlspecialchars($row['plat_nomor']) . " - "
+                  . htmlspecialchars($row['merek']) . " ("
+                  . htmlspecialchars($row['jenis_kendaraan']) . ")</option>";
+        }
+    }
+    return $html;
 }
 
 function getPemakaianSedangDipakaiOptions() {
@@ -487,34 +528,16 @@ function requestKendaraan($user_id, $id_kendaraan) {
     $user_id = (int)$user_id;
     $id_kendaraan = (int)$id_kendaraan;
 
-    // Cek kendaraan apakah tersedia atau inventaris
-    $cek = mysqli_query($conn, "SELECT id_status FROM kendaraan WHERE id = $id_kendaraan");
-    if (!$cek || mysqli_num_rows($cek) === 0) return false;
-
-    $row = mysqli_fetch_assoc($cek);
-    if (!in_array((int)$row['id_status'], [1, 3])) {
-        return 'not_available'; // kendaraan tidak bisa di-request
+    // Cek apakah sudah ada request Pending untuk kendaraan ini dari user yang sama
+    $cek = mysqli_query($conn, "SELECT id FROM request WHERE id_user = $user_id AND id_kendaraan = $id_kendaraan AND id_status = 8");
+    if ($cek && mysqli_num_rows($cek) > 0) {
+        return 'duplicate';
     }
 
-    mysqli_begin_transaction($conn);
+    $sql = "INSERT INTO request (id_user, id_kendaraan, id_status, tanggal_request, created_at, updated_at, created_by, updated_by)
+            VALUES ($user_id, $id_kendaraan, 8, NOW(), NOW(), NOW(), $user_id, $user_id)";
 
-    // Insert ke pemakaian dengan status Request (6)
-    $sql1 = "INSERT INTO pemakaian (id_user, id_inventaris, tanggal_keluar, tanggal_masuk, id_status, created_at, updated_at, created_by, updated_by)
-             VALUES ($user_id, $id_kendaraan, CURDATE(), '0000-00-00', 6, NOW(), NOW(), $user_id, $user_id)";
-    if (!mysqli_query($conn, $sql1)) {
-        mysqli_rollback($conn);
-        return false;
-    }
-
-    // Update status kendaraan ke Request (6)
-    $sql2 = "UPDATE kendaraan SET id_status = 6 WHERE id = $id_kendaraan";
-    if (!mysqli_query($conn, $sql2)) {
-        mysqli_rollback($conn);
-        return false;
-    }
-
-    mysqli_commit($conn);
-    return true;
+    return mysqli_query($conn, $sql) ? true : false;
 }
 
 // === FUNGSI APPROVE REQUEST ===
@@ -522,23 +545,46 @@ function approveRequest($id_request) {
     global $conn;
     $id_request = (int)$id_request;
 
+    // Ambil data request
+    $q = mysqli_query($conn, "SELECT id_user, id_kendaraan FROM request WHERE id = $id_request AND id_status = 8");
+    if (!$q || mysqli_num_rows($q) === 0) {
+        return false; // request tidak ditemukan atau bukan Pending
+    }
+    $data = mysqli_fetch_assoc($q);
+    $id_kendaraan = (int)$data['id_kendaraan'];
+    $id_user = (int)$data['id_user'];
+
+    // Cek status kendaraan
+    $cek = mysqli_query($conn, "SELECT id_status FROM kendaraan WHERE id = $id_kendaraan");
+    if (!$cek || mysqli_num_rows($cek) === 0) {
+        return false;
+    }
+    $kendaraan = mysqli_fetch_assoc($cek);
+
+    if ((int)$kendaraan['id_status'] !== 1) {
+        return 'not_available'; // kendaraan sedang tidak tersedia
+    }
+
     mysqli_begin_transaction($conn);
 
-    // Update status pemakaian menjadi Sedang Dipakai (2)
-    $sql1 = "UPDATE pemakaian SET id_status = 2 WHERE id = $id_request";
+    // Update request ke Approved (9)
+    $sql1 = "UPDATE request SET id_status = 9, updated_at = NOW() WHERE id = $id_request";
     if (!mysqli_query($conn, $sql1)) {
         mysqli_rollback($conn);
         return false;
     }
 
-    // Ambil id_inventaris
-    $q = mysqli_query($conn, "SELECT id_inventaris FROM pemakaian WHERE id = $id_request");
-    $d = mysqli_fetch_assoc($q);
-    $id_kendaraan = (int)$d['id_inventaris'];
-
-    // Update kendaraan menjadi Sedang Dipakai (2)
-    $sql2 = "UPDATE kendaraan SET id_status = 2 WHERE id = $id_kendaraan";
+    // Tambahkan ke tabel pemakaian
+    $sql2 = "INSERT INTO pemakaian (id_user, id_inventaris, tanggal_keluar, tanggal_masuk, id_status, created_at, updated_at, created_by, updated_by)
+             VALUES ($id_user, $id_kendaraan, CURDATE(), '0000-00-00', 2, NOW(), NOW(), $id_user, $id_user)";
     if (!mysqli_query($conn, $sql2)) {
+        mysqli_rollback($conn);
+        return false;
+    }
+
+    // Update kendaraan jadi Sedang Dipakai (2)
+    $sql3 = "UPDATE kendaraan SET id_status = 2 WHERE id = $id_kendaraan";
+    if (!mysqli_query($conn, $sql3)) {
         mysqli_rollback($conn);
         return false;
     }
@@ -554,29 +600,31 @@ function rejectRequest($id_request) {
 
     mysqli_begin_transaction($conn);
 
-    // Ambil id_inventaris
-    $q = mysqli_query($conn, "SELECT id_inventaris FROM pemakaian WHERE id = $id_request");
+    // Ambil data request
+    $q = mysqli_query($conn, "SELECT id_user, id_kendaraan FROM request WHERE id = $id_request AND id_status = 8");
     if (!$q || mysqli_num_rows($q) === 0) {
-        mysqli_rollback($conn);
-        return false;
+        return false; // request tidak ditemukan atau bukan Pending
     }
-    $d = mysqli_fetch_assoc($q);
-    $id_kendaraan = (int)$d['id_inventaris'];
+    $data = mysqli_fetch_assoc($q);
+    $id_kendaraan = (int)$data['id_kendaraan'];
+    $id_user = (int)$data['id_user'];
 
-    // Set Status Menjadi Ditolak
-    $sql1 = "UPDATE pemakaian SET id_status = 7 WHERE id = $id_request";
+    // Update request menjadi Ditolak (id_status = 7)
+    $sql1 = "UPDATE request SET id_status = 7, updated_at = NOW() WHERE id = $id_request"; // 7 = Ditolak
     if (!mysqli_query($conn, $sql1)) {
         mysqli_rollback($conn);
         return false;
     }
 
-    // Update kendaraan menjadi Tersedia (1)
-    $sql2 = "UPDATE kendaraan SET id_status = 1 WHERE id = $id_kendaraan";
+    // Tambahkan ke tabel pemakaian
+    $sql2 = "INSERT INTO pemakaian (id_user, id_inventaris, tanggal_keluar, tanggal_masuk, id_status, created_at, updated_at, created_by, updated_by)
+             VALUES ($id_user, $id_kendaraan, CURDATE(), '0000-00-00', 7, NOW(), NOW(), $id_user, $id_user)";
     if (!mysqli_query($conn, $sql2)) {
         mysqli_rollback($conn);
         return false;
     }
 
+    // Tidak perlu ubah status kendaraan karena belum diubah saat request
     mysqli_commit($conn);
     return true;
 }
@@ -682,7 +730,8 @@ function getDataView($page) {
             INNER JOIN `user` u ON p.id_user = u.id
             INNER JOIN kendaraan k ON p.id_inventaris = k.id
             INNER JOIN status s ON p.id_status = s.id
-            WHERE p.id_status NOT IN (5,7,6)";
+            WHERE p.id_status NOT IN (5,7,6)
+            ORDER BY tanggal_keluar DESC";
     }
     else if ($page == 'pemakaianSelesai') {
     $sql = "SELECT p.id, u.nama AS nama_user, k.plat_nomor, p.tanggal_keluar, p.tanggal_masuk, s.nama_status
@@ -690,7 +739,8 @@ function getDataView($page) {
             INNER JOIN `user` u ON p.id_user = u.id
             INNER JOIN kendaraan k ON p.id_inventaris = k.id
             INNER JOIN status s ON p.id_status = s.id
-            WHERE p.id_status IN (5,7)";
+            WHERE p.id_status IN (5,7)
+            ORDER BY tanggal_keluar DESC";
     }
     else if ($page == 'divisi') {
         $sql = "SELECT * FROM divisi";

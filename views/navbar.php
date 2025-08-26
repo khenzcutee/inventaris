@@ -13,13 +13,7 @@
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav me-auto">
                 <li class="nav-item">
-                    <a class="nav-link" href="view_Data.php?type=divisi">Divisi</a>
-                </li>
-                <li class="nav-item">
                     <a class="nav-link" href="view_Data.php?type=kendaraan">Kendaraan</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="view_Data.php?type=lokasi">Lokasi</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="view_Data.php?type=pemakaian">Pemakaian</a>
@@ -32,12 +26,6 @@
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="approved.php">Approval</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="view_Data.php?type=roles">Roles</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="view_Data.php?type=status">Status</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="view_Data.php?type=user">User</a>

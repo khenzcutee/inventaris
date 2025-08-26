@@ -2,7 +2,7 @@
 session_start();
 require "../functions/functions.php";
 
-if (!isset($_SESSION['logged_in'])) {
+if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['id_roles'], [3,4])) {
     header("Location: ../index.php");
     exit;
 }
@@ -54,13 +54,15 @@ $pemakaian = getPemakaianLengkap();
         .card-table:hover {
             transform: none;
         }
+        a {
+            text-decoration: none;
+        }
     </style>
 </head>
 <body class="d-flex flex-column min-vh-100">
 
 <?php include "navbar.php"; ?>
 <?php include "sidebar.php"; ?>
-
 <!-- Main Content -->
 <div class="col-md-10 p-4">
     <h2 class="mb-4 text-primary">📊 Dashboard Inventaris</h2>
@@ -78,29 +80,35 @@ $pemakaian = getPemakaianLengkap();
         </div>
         <div class="col-md-3">
             <div class="card text-center stats-card">
+                <a href="view_data.php?type=kendaraan">
                 <div class="card-header">Kendaraan</div>
                 <div class="card-body">
                     <h3 class="text-primary"><?= $jumlahKendaraanTersedia ?></h3>
                     <p class="text-muted">Kendaraan Yang Tersedia</p>
                 </div>
+                </a>
             </div>
         </div>
         <div class="col-md-3">
             <div class="card text-center stats-card">
+                <a href="approved.php">
                 <div class="card-header">Request</div>
                 <div class="card-body">
                     <h3 class="text-primary"><?= $jumlahRequest?></h3>
                     <p class="text-muted">Total Request</p>
                 </div>
+                </a>
             </div>
         </div>
         <div class="col-md-3">
             <div class="card text-center stats-card">
+                <a href="view_data.php?type=pemakaian">
                 <div class="card-header">Pemakaian</div>
                 <div class="card-body">
                     <h3 class="text-primary"><?= $jumlahPemakaian ?></h3>
                     <p class="text-muted">Pemakaian Aktif</p>
                 </div>
+                </a>
             </div>
         </div>
     </div>

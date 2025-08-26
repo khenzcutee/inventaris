@@ -2,8 +2,8 @@
 session_start();
 require "../functions/functions.php";
 
-if (!isset($_SESSION['logged_in'])) {
-    header("Location: ../login.php");
+if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['id_roles'], [3])) {
+    header("Location: ../index.php");
     exit;
 }
 
@@ -29,13 +29,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $result = false;
     }
 
-    if ($result) {
-        echo "<script>alert('Data berhasil ditambahkan!');window.location='view_Data.php?type=$type';</script>";
-    } else {
-        echo "<script>alert('Gagal menambahkan data!');</script>";
-    }
+    $status = $result
+        ? ['icon' => 'success', 'title' => 'Berhasil!', 'text' => 'Data berhasil ditambahkan!']
+        : ['icon' => 'error', 'title' => 'Gagal!', 'text' => 'Data gagal ditambahkan!'];
 }
 ?>
+
+<?php if (isset($status)): ?>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    Swal.fire({
+        icon: '<?= $status['icon'] ?>',
+        title: '<?= $status['title'] ?>',
+        text: '<?= $status['text'] ?>'
+    }).then(() => {
+        <?php if ($status['icon'] === 'success'): ?>
+            window.location.href = 'view_Data.php?type=<?= $type ?>';
+        <?php endif; ?>
+    });
+});
+</script>
+<?php endif; ?>
 <!DOCTYPE html>
 <html lang="id">
 <head>

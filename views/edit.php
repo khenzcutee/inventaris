@@ -2,7 +2,7 @@
 session_start();
 require "../functions/functions.php";
 
-if (!isset($_SESSION['logged_in'])) {
+if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['id_roles'], [3,4])) {
     header("Location: ../index.php");
     exit;
 }
