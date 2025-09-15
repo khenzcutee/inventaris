@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Aug 22, 2025 at 11:34 AM
+-- Generation Time: Aug 26, 2025 at 12:00 PM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.0.28
 
@@ -41,8 +41,9 @@ CREATE TABLE `divisi` (
 --
 
 INSERT INTO `divisi` (`id`, `nama_divisi`, `created_at`, `updated_at`, `created_by`, `updated_by`) VALUES
-(1, 'General Affair 1', '2025-08-12', '2025-08-12', 0, 0),
-(2, 'Service', '2025-08-19', '2025-08-19', 1, 1);
+(1, 'General Affair', '2025-08-12', '2025-08-12', 0, 0),
+(2, 'Service', '2025-08-19', '2025-08-19', 1, 1),
+(4, 'Aftersales', '2025-08-26', '2025-08-26', 1, 1);
 
 -- --------------------------------------------------------
 
@@ -73,8 +74,8 @@ CREATE TABLE `kendaraan` (
 --
 
 INSERT INTO `kendaraan` (`id`, `plat_nomor`, `nomor_stnk`, `bahan_bakar`, `warna`, `jenis_kendaraan`, `merek`, `kilometer`, `gambar`, `id_lokasi`, `id_status`, `created_at`, `updated_at`, `created_by`, `updated_by`) VALUES
-(1, 'B 3759 KC', '1234567890', 'Bensin', 'Putih1', 'Motor', 'Yamaha', 10000, 'mio.jpg', 1, 6, '2025-08-12', '2025-08-22', 1, 1),
-(2, 'B 3647 KPT', '1234567890', 'Bensin', 'Kuning', 'Motor', 'Hino', 176456423, 'img_68a52a4e2ad897.97425001.jpg', 1, 2, '2025-08-20', '2025-08-22', 1, 1);
+(1, 'B 3759 KC', '1234567890', 'Bensin', 'Putih1', 'Motor', 'Yamaha', 10000, 'mio.jpg', 1, 1, '2025-08-12', '2025-08-22', 1, 1),
+(2, 'B 3647 KPT', '1234567890', 'Bensin', 'Kuning', 'Motor', 'Hino', 176456423, 'img_68a52a4e2ad897.97425001.jpg', 1, 1, '2025-08-20', '2025-08-26', 1, 1);
 
 -- --------------------------------------------------------
 
@@ -130,8 +131,68 @@ INSERT INTO `pemakaian` (`id`, `id_user`, `id_inventaris`, `tanggal_keluar`, `ta
 (23, 1, 2, '2025-08-21', '2025-08-21', 5, '2025-08-21', '2025-08-21', 1, 1),
 (24, 1, 1, '2025-08-21', '2025-08-21', 5, '2025-08-21', '2025-08-21', 1, 1),
 (25, 1, 2, '2025-08-22', '2025-08-22', 5, '2025-08-22', '2025-08-22', 1, 1),
-(29, 1, 2, '2025-08-22', '0000-00-00', 2, '2025-08-22', '2025-08-22', 1, 1),
-(33, 4, 1, '2025-08-22', '0000-00-00', 6, '2025-08-22', '2025-08-22', 4, 4);
+(29, 1, 2, '2025-08-22', '2025-08-25', 5, '2025-08-22', '2025-08-22', 1, 1),
+(33, 4, 1, '2025-08-22', '2025-08-25', 5, '2025-08-22', '2025-08-22', 4, 4),
+(39, 1, 2, '2025-08-25', '0000-00-00', 7, '2025-08-25', '2025-08-25', 1, 1),
+(40, 1, 2, '2025-08-25', '2025-08-25', 5, '2025-08-25', '2025-08-25', 1, 1),
+(41, 1, 2, '2025-08-25', '0000-00-00', 7, '2025-08-25', '2025-08-25', 1, 1),
+(42, 1, 2, '2025-08-25', '2025-08-26', 5, '2025-08-25', '2025-08-25', 1, 1),
+(43, 1, 2, '2025-08-26', '2025-08-26', 5, '2025-08-26', '2025-08-26', 1, 1),
+(44, 1, 2, '2025-08-26', '2025-08-26', 5, '2025-08-26', '2025-08-26', 1, 1),
+(45, 1, 2, '2025-08-26', '2025-08-26', 5, '2025-08-26', '2025-08-26', 1, 1),
+(46, 1, 2, '2025-08-26', '2025-08-26', 5, '2025-08-26', '2025-08-26', 1, 1),
+(47, 1, 1, '2025-08-26', '2025-08-26', 5, '2025-08-26', '2025-08-26', 1, 1),
+(48, 1, 1, '2025-08-26', '2025-08-26', 5, '2025-08-26', '2025-08-26', 1, 1),
+(49, 4, 2, '2025-08-26', '2025-08-26', 5, '2025-08-26', '2025-08-26', 1, 1),
+(50, 1, 1, '2025-08-26', '0000-00-00', 5, '2025-08-26', '2025-08-26', 1, 1),
+(51, 1, 2, '2025-08-26', '2025-08-26', 5, '2025-08-26', '2025-08-26', 1, 1),
+(52, 1, 2, '2025-08-26', '2025-08-26', 5, '2025-08-26', '2025-08-26', 1, 1),
+(53, 1, 2, '2025-08-26', '2025-08-26', 5, '2025-08-26', '2025-08-26', 1, 1),
+(54, 1, 2, '2025-08-26', '2025-08-26', 5, '2025-08-26', '2025-08-26', 1, 1),
+(56, 1, 2, '2025-08-26', '0000-00-00', 7, '2025-08-26', '2025-08-26', 1, 1),
+(57, 1, 2, '2025-08-26', '0000-00-00', 7, '2025-08-26', '2025-08-26', 1, 1),
+(58, 1, 2, '2025-08-26', '0000-00-00', 7, '2025-08-26', '2025-08-26', 1, 1),
+(59, 1, 2, '2025-08-26', '0000-00-00', 7, '2025-08-26', '2025-08-26', 1, 1),
+(60, 1, 2, '2025-08-26', '2025-08-26', 5, '2025-08-26', '2025-08-26', 1, 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `request`
+--
+
+CREATE TABLE `request` (
+  `id` int(11) NOT NULL,
+  `id_user` int(11) NOT NULL,
+  `id_kendaraan` int(11) NOT NULL,
+  `id_status` int(11) NOT NULL,
+  `tanggal_request` datetime NOT NULL,
+  `tanggal_digunakan` date DEFAULT NULL,
+  `keterangan` text DEFAULT NULL,
+  `created_at` date NOT NULL,
+  `updated_at` date NOT NULL,
+  `created_by` int(11) NOT NULL,
+  `updated_by` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `request`
+--
+
+INSERT INTO `request` (`id`, `id_user`, `id_kendaraan`, `id_status`, `tanggal_request`, `tanggal_digunakan`, `keterangan`, `created_at`, `updated_at`, `created_by`, `updated_by`) VALUES
+(1, 1, 1, 7, '0000-00-00 00:00:00', NULL, NULL, '2025-08-26', '2025-08-26', 0, 0),
+(2, 1, 2, 7, '0000-00-00 00:00:00', NULL, NULL, '2025-08-26', '2025-08-26', 0, 0),
+(3, 1, 2, 7, '0000-00-00 00:00:00', NULL, NULL, '2025-08-26', '2025-08-26', 1, 1),
+(4, 1, 1, 9, '0000-00-00 00:00:00', NULL, NULL, '2025-08-26', '2025-08-26', 1, 1),
+(5, 1, 2, 9, '0000-00-00 00:00:00', NULL, NULL, '2025-08-26', '2025-08-26', 1, 1),
+(6, 1, 2, 9, '0000-00-00 00:00:00', NULL, NULL, '2025-08-26', '2025-08-26', 1, 1),
+(7, 1, 2, 9, '0000-00-00 00:00:00', NULL, NULL, '2025-08-26', '2025-08-26', 1, 1),
+(8, 1, 2, 7, '0000-00-00 00:00:00', NULL, NULL, '2025-08-26', '2025-08-26', 1, 1),
+(9, 1, 2, 7, '0000-00-00 00:00:00', NULL, NULL, '2025-08-26', '2025-08-26', 1, 1),
+(10, 1, 2, 7, '0000-00-00 00:00:00', NULL, NULL, '2025-08-26', '2025-08-26', 1, 1),
+(11, 1, 2, 7, '0000-00-00 00:00:00', NULL, NULL, '2025-08-26', '2025-08-26', 1, 1),
+(12, 1, 2, 7, '0000-00-00 00:00:00', NULL, NULL, '2025-08-26', '2025-08-26', 1, 1),
+(13, 1, 2, 9, '2025-08-26 16:24:39', NULL, NULL, '2025-08-26', '2025-08-26', 1, 1);
 
 -- --------------------------------------------------------
 
@@ -181,7 +242,10 @@ INSERT INTO `status` (`id`, `nama_status`, `created_at`, `updated_at`, `created_
 (2, 'Sedang Dipakai', '2025-08-12', '2025-08-12', 0, 0),
 (3, 'Inventaris ', '2025-08-12', '2025-08-12', 0, 0),
 (5, 'Selesai', '2025-08-20', '2025-08-20', 1, 1),
-(6, 'Request', '2025-08-21', '2025-08-21', 1, 1);
+(6, 'Request', '2025-08-21', '2025-08-21', 1, 1),
+(7, 'Ditolak', '2025-08-25', '2025-08-25', 1, 1),
+(8, 'Pending', '2025-08-26', '2025-08-26', 1, 1),
+(9, 'Approved', '2025-08-26', '2025-08-26', 1, 1);
 
 -- --------------------------------------------------------
 
@@ -207,8 +271,9 @@ CREATE TABLE `user` (
 --
 
 INSERT INTO `user` (`id`, `nama`, `username`, `password`, `id_divisi`, `id_roles`, `created_at`, `updated_at`, `created_by`, `updated_by`) VALUES
-(1, 'Daniel Carqua2', 'Daniel', '$2y$10$2z6ZBVpUgzspCWzDH.5PN.MJnqJUUfMkSNNexefHYrCXTaRS7LPvi', 1, 3, '2025-08-12', '2025-08-12', 0, 0),
-(4, 'Daniel N', 'DanielB', '$2y$10$OiMlXz0EuHvu9FZzDZP/Pey6uPhiDwlEEg6uqtinLEBXBPse3StAy', 2, 5, '2025-08-22', '2025-08-22', 1, 1);
+(1, 'Daniel Carqua', 'Daniel', '$2y$10$2z6ZBVpUgzspCWzDH.5PN.MJnqJUUfMkSNNexefHYrCXTaRS7LPvi', 4, 3, '2025-08-12', '2025-08-12', 0, 0),
+(4, 'Daniel N', 'DanielB', '$2y$10$OiMlXz0EuHvu9FZzDZP/Pey6uPhiDwlEEg6uqtinLEBXBPse3StAy', 2, 5, '2025-08-22', '2025-08-22', 1, 1),
+(5, 'Carqua', 'Carqua', '$2y$10$RHbShqI150dX.E/M835C7uOb9AujMHskQ.U5yfjDuRSSgNuekXt52', 1, 4, '2025-08-26', '2025-08-26', 1, 1);
 
 --
 -- Indexes for dumped tables
@@ -244,6 +309,15 @@ ALTER TABLE `pemakaian`
   ADD KEY `fk_pemakaian_status` (`id_status`);
 
 --
+-- Indexes for table `request`
+--
+ALTER TABLE `request`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_request_status` (`id_status`),
+  ADD KEY `fk_request_kendaraan` (`id_kendaraan`),
+  ADD KEY `fk_request_user` (`id_user`);
+
+--
 -- Indexes for table `roles`
 --
 ALTER TABLE `roles`
@@ -271,7 +345,7 @@ ALTER TABLE `user`
 -- AUTO_INCREMENT for table `divisi`
 --
 ALTER TABLE `divisi`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `kendaraan`
@@ -289,7 +363,13 @@ ALTER TABLE `lokasi`
 -- AUTO_INCREMENT for table `pemakaian`
 --
 ALTER TABLE `pemakaian`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=61;
+
+--
+-- AUTO_INCREMENT for table `request`
+--
+ALTER TABLE `request`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT for table `roles`
@@ -301,13 +381,13 @@ ALTER TABLE `roles`
 -- AUTO_INCREMENT for table `status`
 --
 ALTER TABLE `status`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `user`
 --
 ALTER TABLE `user`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- Constraints for dumped tables
@@ -327,6 +407,14 @@ ALTER TABLE `pemakaian`
   ADD CONSTRAINT `fk_pemakaian_kendaraan` FOREIGN KEY (`id_inventaris`) REFERENCES `kendaraan` (`id`) ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_pemakaian_status` FOREIGN KEY (`id_status`) REFERENCES `status` (`id`) ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_pemakaian_user` FOREIGN KEY (`id_user`) REFERENCES `user` (`id`) ON UPDATE CASCADE;
+
+--
+-- Constraints for table `request`
+--
+ALTER TABLE `request`
+  ADD CONSTRAINT `fk_request_kendaraan` FOREIGN KEY (`id_kendaraan`) REFERENCES `kendaraan` (`id`) ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_request_status` FOREIGN KEY (`id_status`) REFERENCES `status` (`id`) ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_request_user` FOREIGN KEY (`id_user`) REFERENCES `user` (`id`) ON UPDATE CASCADE;
 
 --
 -- Constraints for table `user`

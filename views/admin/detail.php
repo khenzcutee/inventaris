@@ -1,6 +1,6 @@
 <?php
 session_start();
-require "../functions/functions.php";
+require "../../functions/functions.php";
 
 // Cek login
 if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['id_roles'], [3,4])) {
@@ -28,7 +28,7 @@ if (!$data) {
     <meta charset="UTF-8">
     <title>Detail <?= ucfirst($type) ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="../assets/css/dashboard.css" rel="stylesheet">
+    <link href="../../assets/css/dashboard.css" rel="stylesheet">
 </head>
 <body class="d-flex flex-column min-vh-100">
 

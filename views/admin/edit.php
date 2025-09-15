@@ -1,6 +1,6 @@
 <?php
 session_start();
-require "../functions/functions.php";
+require "../../functions/functions.php";
 
 if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['id_roles'], [3,4])) {
     header("Location: ../index.php");
@@ -58,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <title>Edit <?= ucfirst($type) ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="../assets/css/dashboard.css" rel="stylesheet">
+    <link href="../../assets/css/dashboard.css" rel="stylesheet">
 </head>
 <body class="d-flex flex-column min-vh-100">
 <?php include "navbar.php"; ?>
@@ -133,33 +133,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <label>Status</label>
                         <select name="id_status" class="form-control">
                             <?= getStatusOptions($data['id_status']); ?>
-                        </select>
-                    </div>
-
-                <?php elseif ($type == 'pemakaian'): ?>
-                    <!-- Tampilkan informasi agar user tahu -->
-                    <div class="mb-3">
-                        <label>User</label>
-                        <input type="text" class="form-control" value="<?= htmlspecialchars($data['nama_user']) ?>" disabled>
-                        <input type="hidden" name="id_user" value="<?= isset($data['id_user']) ? (int)$data['id_user'] : 0 ?>">
-                    </div>
-                    <div class="mb-3">
-                        <label>Kendaraan</label>
-                        <input type="text" class="form-control" value="<?= htmlspecialchars($data['plat_nomor']) ?>" disabled>
-                        <input type="hidden" name="id_inventaris" value="<?= isset($data['id_inventaris']) ? (int)$data['id_inventaris'] : 0 ?>">
-                    </div>
-                    <div class="mb-3">
-                        <label>Tanggal Keluar</label>
-                        <input type="date" name="tanggal_keluar" class="form-control" value="<?= htmlspecialchars($data['tanggal_keluar']) ?>" required>
-                    </div>
-                    <div class="mb-3">
-                        <label>Tanggal Masuk</label>
-                        <input type="date" name="tanggal_masuk" class="form-control" value="<?= htmlspecialchars($data['tanggal_masuk']) ?>">
-                    </div>
-                    <div class="mb-3">
-                        <label>Status</label>
-                        <select name="id_status" class="form-control" value="<?= isset($data['id_status']) ?>">
-                            <?=getStatusEditOptions($data['nama_status']);?>
                         </select>
                     </div>
                     

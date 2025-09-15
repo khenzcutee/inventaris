@@ -1,6 +1,6 @@
 <?php
 session_start();
-require "../functions/functions.php";
+require "../../functions/functions.php";
 
 if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['id_roles'], [3,4])) {
     header("Location: ../index.php");
@@ -35,7 +35,7 @@ $pemakaian = getPemakaianLengkap();
     <title>Dashboard Inventaris</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
-    <link href="../assets/css/dashboard.css" rel="stylesheet">
+    <link href="../../assets/css/dashboard.css" rel="stylesheet">
     <style>
         /* Efek hover hanya untuk card statistik */
         .stats-card {

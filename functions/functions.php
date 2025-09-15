@@ -103,6 +103,69 @@ function getCountRequest($table) {
     return 0;
 }
 
+function getCountRequestUser($table) {
+    global $conn;
+    
+    // Pastikan nama tabel aman (whitelist)
+    $allowedTables = ['pemakaian', 'kendaraan', 'user', 'request'];
+    if (!in_array($table, $allowedTables)) {
+        return 0;
+    }
+
+    $id_user = $_SESSION['id'];
+    $sql = "SELECT COUNT(*) as total FROM $table WHERE id_status = 8 AND id_user = $id_user";
+    $result = mysqli_query($conn, $sql);
+    
+    if ($result) {
+        $row = mysqli_fetch_assoc($result);
+        return (int)$row['total'];
+    }
+    
+    return 0;
+}
+
+function getCountPemakaianUser($table) {
+    global $conn;
+    
+    // Pastikan nama tabel aman (whitelist)
+    $allowedTables = ['pemakaian', 'kendaraan', 'user', 'request'];
+    if (!in_array($table, $allowedTables)) {
+        return 0;
+    }
+
+    $id_user = $_SESSION['id'];
+    $sql = "SELECT COUNT(*) as total FROM $table WHERE id_status = 2 AND id_user = $id_user";
+    $result = mysqli_query($conn, $sql);
+    
+    if ($result) {
+        $row = mysqli_fetch_assoc($result);
+        return (int)$row['total'];
+    }
+    
+    return 0;
+}
+
+function getCountHistoryUser($table) {
+    global $conn;
+    
+    // Pastikan nama tabel aman (whitelist)
+    $allowedTables = ['pemakaian', 'kendaraan', 'user', 'request'];
+    if (!in_array($table, $allowedTables)) {
+        return 0;
+    }
+
+    $id_user = $_SESSION['id'];
+    $sql = "SELECT COUNT(*) as total FROM $table WHERE id_status IN (5,2) AND id_user = $id_user";
+    $result = mysqli_query($conn, $sql);
+    
+    if ($result) {
+        $row = mysqli_fetch_assoc($result);
+        return (int)$row['total'];
+    }
+    
+    return 0;
+}
+
 function getCountKendaraanTersedia($table) {
     global $conn;
     
@@ -446,7 +509,7 @@ function tambahuser($data) {
     $password = password_hash($data['password'], PASSWORD_DEFAULT);
     $id_divisi = mysqli_escape_string($conn, $data['id_divisi']);
     $id_roles = mysqli_escape_string($conn, $data['id_roles']);
-    $user_id = $_SESSION['user_id'];
+    $user_id = $_SESSION['id'];
     
     $query = "INSERT INTO user (nama, username, password, id_divisi, id_roles, created_at, updated_at, created_by, updated_by)
               VALUES ('$nama', '$username', '$password', $id_divisi, $id_roles, NOW(), NOW(), $user_id, $user_id)";
@@ -706,6 +769,327 @@ function tambahStatus($data) {
     return mysqli_query($conn , $query);
 }
 
+function getPaginatedData($type, $search = '', $limit = 10, $offset = 0) {
+    global $conn;
+
+    $allowed = ['user','kendaraan','pemakaian','pemakaianSelesai','divisi','roles','status','lokasi'];
+    if (!in_array($type, $allowed, true)) return [];
+
+    $conds = []; // array kondisi
+    $order = "ORDER BY id DESC"; // default, akan dioverride untuk join
+
+    // Buat filter pencarian per tipe
+    if ($search !== '') {
+        $s = mysqli_real_escape_string($conn, $search);
+        if ($type === 'user') {
+            $conds[] = "(u.nama LIKE '%$s%' OR u.username LIKE '%$s%')";
+        } elseif ($type === 'kendaraan') {
+            $conds[] = "(k.plat_nomor LIKE '%$s%' OR k.merek LIKE '%$s%' OR k.nomor_stnk LIKE '%$s%')";
+        } elseif ($type === 'pemakaian' || $type === 'pemakaianSelesai') {
+            $conds[] = "(u.nama LIKE '%$s%' OR k.plat_nomor LIKE '%$s%')";
+        } elseif ($type === 'divisi') {
+            $conds[] = "(nama_divisi LIKE '%$s%')";
+        } elseif ($type === 'roles') {
+            $conds[] = "(nama_roles LIKE '%$s%')";
+        } elseif ($type === 'status') {
+            $conds[] = "(nama_status LIKE '%$s%')";
+        } elseif ($type === 'lokasi') {
+            $conds[] = "(nama_lokasi LIKE '%$s%' OR alamat LIKE '%$s%')";
+        }
+    }
+
+    if ($type === 'user') {
+        $baseConds = $conds;
+        $where = $baseConds ? ('WHERE '.implode(' AND ', $baseConds)) : '';
+        $sql = "SELECT u.*, d.nama_divisi, r.nama_roles
+                FROM user u
+                JOIN divisi d ON u.id_divisi = d.id
+                JOIN roles r ON u.id_roles = r.id
+                $where
+                ORDER BY u.id DESC
+                LIMIT $limit OFFSET $offset";
+
+    } elseif ($type === 'kendaraan') {
+        $baseConds = $conds;
+        $where = $baseConds ? ('WHERE '.implode(' AND ', $baseConds)) : '';
+        $sql = "SELECT k.*, l.nama_lokasi, s.nama_status
+                FROM kendaraan k
+                JOIN lokasi l ON k.id_lokasi = l.id
+                JOIN status s ON k.id_status = s.id
+                $where
+                ORDER BY k.id DESC
+                LIMIT $limit OFFSET $offset";
+
+    } elseif ($type === 'pemakaian') {
+        // aktif: tidak menampilkan selesai(5) & ditolak(7)
+        $baseConds = array_merge(["p.id_status NOT IN (5,7)"], $conds);
+        $where = 'WHERE '.implode(' AND ', $baseConds);
+        $sql = "SELECT p.*, u.nama AS nama_user, k.plat_nomor, s.nama_status
+                FROM pemakaian p
+                JOIN user u ON p.id_user = u.id
+                JOIN kendaraan k ON p.id_inventaris = k.id
+                JOIN status s ON p.id_status = s.id
+                $where
+                ORDER BY p.id DESC
+                LIMIT $limit OFFSET $offset";
+
+    } elseif ($type === 'pemakaianSelesai') {
+        $baseConds = array_merge(["p.id_status = 5"], $conds);
+        $where = 'WHERE '.implode(' AND ', $baseConds);
+        $sql = "SELECT p.*, u.nama AS nama_user, k.plat_nomor, s.nama_status
+                FROM pemakaian p
+                JOIN user u ON p.id_user = u.id
+                JOIN kendaraan k ON p.id_inventaris = k.id
+                JOIN status s ON p.id_status = s.id
+                $where
+                ORDER BY p.id DESC
+                LIMIT $limit OFFSET $offset";
+
+    } else {
+        // tabel sederhana (divisi, roles, status, lokasi)
+        $where = $conds ? ('WHERE '.implode(' AND ', $conds)) : '';
+        $sql = "SELECT * FROM $type $where ORDER BY id DESC LIMIT $limit OFFSET $offset";
+    }
+
+    $res = mysqli_query($conn, $sql);
+    $data = [];
+    if ($res) {
+        while ($row = mysqli_fetch_assoc($res)) {
+            $data[] = $row;
+        }
+    }
+    return $data;
+}
+
+// Ambil pemakaian aktif user (status = 2)
+function getUserPemakaianAktif($userId, $search = '', $limit = 10, $offset = 0) {
+    global $conn;
+
+    $conds = ["p.id_user = " . (int)$userId, "p.id_status = 2"];
+
+    if ($search !== '') {
+        $s = mysqli_real_escape_string($conn, $search);
+        $conds[] = "(k.plat_nomor LIKE '%$s%' OR s.nama_status LIKE '%$s%')";
+    }
+
+    $where = 'WHERE ' . implode(' AND ', $conds);
+
+    $sql = "SELECT p.*, k.plat_nomor, s.nama_status
+            FROM pemakaian p
+            JOIN kendaraan k ON p.id_inventaris = k.id
+            JOIN status s ON p.id_status = s.id
+            $where
+            ORDER BY p.id DESC
+            LIMIT $limit OFFSET $offset";
+
+    $res = mysqli_query($conn, $sql);
+    $data = [];
+    if ($res) {
+        while ($row = mysqli_fetch_assoc($res)) {
+            $data[] = $row;
+        }
+    }
+    return $data;
+}
+
+function getUserPemakaianAktifCount($userId, $search = '') {
+    global $conn;
+
+    $conds = ["p.id_user = " . (int)$userId, "p.id_status = 2"];
+
+    if ($search !== '') {
+        $s = mysqli_real_escape_string($conn, $search);
+        $conds[] = "(k.plat_nomor LIKE '%$s%' OR s.nama_status LIKE '%$s%')";
+    }
+
+    $where = 'WHERE ' . implode(' AND ', $conds);
+
+    $sql = "SELECT COUNT(*) AS total
+            FROM pemakaian p
+            JOIN kendaraan k ON p.id_inventaris = k.id
+            JOIN status s ON p.id_status = s.id
+            $where";
+
+    $res = mysqli_query($conn, $sql);
+    $row = mysqli_fetch_assoc($res);
+    return (int)$row['total'];
+}
+
+// Ambil history user (status = 5 atau 7)
+function getUserPemakaianHistory($userId, $search = '', $limit = 10, $offset = 0) {
+    global $conn;
+
+    $conds = ["p.id_user = " . (int)$userId, "p.id_status IN (5,7)"];
+
+    if ($search !== '') {
+        $s = mysqli_real_escape_string($conn, $search);
+        $conds[] = "(k.plat_nomor LIKE '%$s%' OR s.nama_status LIKE '%$s%')";
+    }
+
+    $where = 'WHERE ' . implode(' AND ', $conds);
+
+    $sql = "SELECT p.*, k.plat_nomor, s.nama_status
+            FROM pemakaian p
+            JOIN kendaraan k ON p.id_inventaris = k.id
+            JOIN status s ON p.id_status = s.id
+            $where
+            ORDER BY p.id DESC
+            LIMIT $limit OFFSET $offset";
+
+    $res = mysqli_query($conn, $sql);
+    $data = [];
+    if ($res) {
+        while ($row = mysqli_fetch_assoc($res)) {
+            $data[] = $row;
+        }
+    }
+    return $data;
+}
+
+function getUserPemakaianHistoryCount($userId, $search = '') {
+    global $conn;
+
+    $conds = ["p.id_user = " . (int)$userId, "p.id_status IN (5,7)"];
+
+    if ($search !== '') {
+        $s = mysqli_real_escape_string($conn, $search);
+        $conds[] = "(k.plat_nomor LIKE '%$s%' OR s.nama_status LIKE '%$s%')";
+    }
+
+    $where = 'WHERE ' . implode(' AND ', $conds);
+
+    $sql = "SELECT COUNT(*) AS total
+            FROM pemakaian p
+            JOIN kendaraan k ON p.id_inventaris = k.id
+            JOIN status s ON p.id_status = s.id
+            $where";
+
+    $res = mysqli_query($conn, $sql);
+    $row = mysqli_fetch_assoc($res);
+    return (int)$row['total'];
+}
+
+function getTotalRows($type, $search = '') {
+    global $conn;
+
+    $allowed = ['user','kendaraan','pemakaian','pemakaianSelesai','divisi','roles','status','lokasi'];
+    if (!in_array($type, $allowed, true)) return 0;
+
+    $conds = [];
+    if ($search !== '') {
+        $s = mysqli_real_escape_string($conn, $search);
+        if ($type === 'user') {
+            $conds[] = "(u.nama LIKE '%$s%' OR u.username LIKE '%$s%')";
+        } elseif ($type === 'kendaraan') {
+            $conds[] = "(k.plat_nomor LIKE '%$s%' OR k.merek LIKE '%$s%' OR k.nomor_stnk LIKE '%$s%')";
+        } elseif ($type === 'pemakaian' || $type === 'pemakaianSelesai') {
+            $conds[] = "(u.nama LIKE '%$s%' OR k.plat_nomor LIKE '%$s%')";
+        } elseif ($type === 'divisi') {
+            $conds[] = "(nama_divisi LIKE '%$s%')";
+        } elseif ($type === 'roles') {
+            $conds[] = "(nama_roles LIKE '%$s%')";
+        } elseif ($type === 'status') {
+            $conds[] = "(nama_status LIKE '%$s%')";
+        } elseif ($type === 'lokasi') {
+            $conds[] = "(nama_lokasi LIKE '%$s%' OR alamat LIKE '%$s%')";
+        }
+    }
+
+    if ($type === 'user') {
+        $where = $conds ? ('WHERE '.implode(' AND ', $conds)) : '';
+        $sql = "SELECT COUNT(*) AS total
+                FROM user u
+                JOIN divisi d ON u.id_divisi = d.id
+                JOIN roles r ON u.id_roles = r.id
+                $where";
+
+    } elseif ($type === 'kendaraan') {
+        $where = $conds ? ('WHERE '.implode(' AND ', $conds)) : '';
+        $sql = "SELECT COUNT(*) AS total
+                FROM kendaraan k
+                JOIN lokasi l ON k.id_lokasi = l.id
+                JOIN status s ON k.id_status = s.id
+                $where";
+
+    } elseif ($type === 'pemakaian') {
+        $baseConds = array_merge(["p.id_status NOT IN (5,7)"], $conds);
+        $where = 'WHERE '.implode(' AND ', $baseConds);
+        $sql = "SELECT COUNT(*) AS total
+                FROM pemakaian p
+                JOIN user u ON p.id_user = u.id
+                JOIN kendaraan k ON p.id_inventaris = k.id
+                JOIN status s ON p.id_status = s.id
+                $where";
+
+    } elseif ($type === 'pemakaianSelesai') {
+        $baseConds = array_merge(["p.id_status = 5"], $conds);
+        $where = 'WHERE '.implode(' AND ', $baseConds);
+        $sql = "SELECT COUNT(*) AS total
+                FROM pemakaian p
+                JOIN user u ON p.id_user = u.id
+                JOIN kendaraan k ON p.id_inventaris = k.id
+                JOIN status s ON p.id_status = s.id
+                $where";
+
+    } else {
+        $where = $conds ? ('WHERE '.implode(' AND ', $conds)) : '';
+        $sql = "SELECT COUNT(*) AS total FROM $type $where";
+    }
+
+    $res = mysqli_query($conn, $sql);
+    if (!$res) return 0;
+    $row = mysqli_fetch_assoc($res);
+    return (int)$row['total'];
+}
+
+// Ambil history khusus 1 user (untuk dashboard_user & view_Data_user)
+function getUserHistory($userId, $search = '', $limit = 10, $offset = 0) {
+    global $conn;
+    $conds = ["p.id_user = $userId"];
+    if ($search !== '') {
+        $s = mysqli_real_escape_string($conn, $search);
+        $conds[] = "(k.plat_nomor LIKE '%$s%' OR s.nama_status LIKE '%$s%')";
+    }
+    $where = "WHERE " . implode(" AND ", $conds);
+
+    $sql = "SELECT p.tanggal_keluar, p.tanggal_masuk, k.plat_nomor, s.nama_status
+            FROM pemakaian p
+            JOIN kendaraan k ON p.id_inventaris = k.id
+            JOIN status s ON p.id_status = s.id
+            $where
+            ORDER BY p.id DESC
+            LIMIT $limit OFFSET $offset";
+
+    $res = mysqli_query($conn, $sql);
+    $data = [];
+    if ($res) {
+        while ($row = mysqli_fetch_assoc($res)) {
+            $data[] = $row;
+        }
+    }
+    return $data;
+}
+
+function getUserHistoryCount($userId, $search = '') {
+    global $conn;
+    $conds = ["p.id_user = $userId"];
+    if ($search !== '') {
+        $s = mysqli_real_escape_string($conn, $search);
+        $conds[] = "(k.plat_nomor LIKE '%$s%' OR s.nama_status LIKE '%$s%' AND p.id_status NOT IN (2))";
+    }
+    $where = "WHERE " . implode(" AND ", $conds);
+
+    $sql = "SELECT COUNT(*) AS total
+            FROM pemakaian p
+            JOIN kendaraan k ON p.id_inventaris = k.id
+            JOIN status s ON p.id_status = s.id
+            $where";
+
+    $res = mysqli_query($conn, $sql);
+    $row = mysqli_fetch_assoc($res);
+    return (int)$row['total'];
+}
+
 function getDataView($page) {
     global $conn;
     $sql = "";
@@ -957,75 +1341,77 @@ function deleteData($type, $id) {
     $id = (int)$id;
 
     if ($type === 'user') {
+        // Cek apakah user masih punya pemakaian
+        $cek = mysqli_query($conn, "SELECT id FROM pemakaian WHERE id_user = $id LIMIT 1");
+        if ($cek && mysqli_num_rows($cek) > 0) {
+            return 'has_relation'; // user masih punya data pemakaian
+        }
+
         $sql = "DELETE FROM user WHERE id = $id";
         $ok  = mysqli_query($conn, $sql);
-        return $ok && mysqli_affected_rows($conn) > 0 ? true : false;
+        return $ok && mysqli_affected_rows($conn) > 0;
 
     } else if ($type === 'kendaraan') {
+        // Cek apakah kendaraan masih dipakai
+        $cek = mysqli_query($conn, "SELECT id FROM pemakaian WHERE id_inventaris = $id AND id_status != 5 LIMIT 1");
+        if ($cek && mysqli_num_rows($cek) > 0) {
+            return 'has_relation'; // kendaraan sedang dipakai atau ada histori aktif
+        }
+
         $sql = "DELETE FROM kendaraan WHERE id = $id";
         $ok  = mysqli_query($conn, $sql);
-        return $ok && mysqli_affected_rows($conn) > 0 ? true : false;
+        return $ok && mysqli_affected_rows($conn) > 0;
 
     } else if ($type === 'pemakaian') {
-    // Ambil id_status & id_inventaris sebelum hapus
-    $cek = mysqli_query($conn, "SELECT id_status, id_inventaris FROM pemakaian WHERE id = $id");
-    if (!$cek || mysqli_num_rows($cek) === 0) {
-        return false; // Data tidak ada
-    }
-    $row = mysqli_fetch_assoc($cek);
-    $id_status = (int)$row['id_status'];
-    $id_inventaris = (int)$row['id_inventaris'];
-
-    // Jika status selesai (5), tidak boleh hapus
-    if ($id_status === 5) {
-        return 'not_allowed';
-    }
-
-    // Hapus pemakaian
-    $sql = "DELETE FROM pemakaian WHERE id = $id";
-    if (mysqli_query($conn, $sql) && mysqli_affected_rows($conn) > 0) {
-        // Setelah berhasil hapus, update status kendaraan menjadi 1 (Tersedia)
-        $updateKendaraan = "UPDATE kendaraan SET id_status = 1 WHERE id = $id_inventaris";
-        mysqli_query($conn, $updateKendaraan);
-        return true;
-    }
-
-    return false;
-
-    } else if ($type === 'pemakaianSelesai') {
-        // Cek status dulu
-        $cek = mysqli_query($conn, "SELECT id_status FROM pemakaian WHERE id = $id");
+        // Ambil id_status & id_inventaris sebelum hapus
+        $cek = mysqli_query($conn, "SELECT id_status, id_inventaris FROM pemakaian WHERE id = $id");
         if (!$cek || mysqli_num_rows($cek) === 0) {
-            return false; // data tidak ada
+            return false;
         }
         $row = mysqli_fetch_assoc($cek);
-        if ((int)$row['id_status'] === 5 || 7) {
-            return 'not_allowed'; // status Selesai → tidak boleh hapus
+        $id_status = (int)$row['id_status'];
+        $id_inventaris = (int)$row['id_inventaris'];
+
+        // Jika status selesai (5), tidak boleh hapus
+        if ($id_status === 5) {
+            return 'not_allowed';
         }
 
+        // Hapus pemakaian
         $sql = "DELETE FROM pemakaian WHERE id = $id";
-        $ok  = mysqli_query($conn, $sql);
-        return $ok && mysqli_affected_rows($conn) > 0 ? true : false;
-
+        if (mysqli_query($conn, $sql) && mysqli_affected_rows($conn) > 0) {
+            // Update kendaraan jadi Tersedia (1)
+            $updateKendaraan = "UPDATE kendaraan SET id_status = 1 WHERE id = $id_inventaris";
+            mysqli_query($conn, $updateKendaraan);
+            return true;
+        }
+        return false;
+        
     } else if ($type === 'divisi') {
+        // Cek relasi ke user
+        $cek = mysqli_query($conn, "SELECT id FROM user WHERE id_divisi = $id LIMIT 1");
+        if ($cek && mysqli_num_rows($cek) > 0) {
+            return 'has_relation';
+        }
+
         $sql = "DELETE FROM divisi WHERE id = $id";
         $ok  = mysqli_query($conn, $sql);
-        return $ok && mysqli_affected_rows($conn) > 0 ? true : false;
+        return $ok && mysqli_affected_rows($conn) > 0;
 
     } else if ($type === 'lokasi') {
         $sql = "DELETE FROM lokasi WHERE id = $id";
         $ok  = mysqli_query($conn, $sql);
-        return $ok && mysqli_affected_rows($conn) > 0 ? true : false;
+        return $ok && mysqli_affected_rows($conn) > 0;
 
     } else if ($type === 'roles') {
         $sql = "DELETE FROM roles WHERE id = $id";
         $ok  = mysqli_query($conn, $sql);
-        return $ok && mysqli_affected_rows($conn) > 0 ? true : false;
+        return $ok && mysqli_affected_rows($conn) > 0;
 
     } else if ($type === 'status') {
         $sql = "DELETE FROM status WHERE id = $id";
         $ok  = mysqli_query($conn, $sql);
-        return $ok && mysqli_affected_rows($conn) > 0 ? true : false;
+        return $ok && mysqli_affected_rows($conn) > 0;
 
     } else {
         return false;
@@ -1038,10 +1424,9 @@ function login($data) {
     $username = trim($data['username']);
     $password = trim($data['password']);
 
-    $stmt = $conn->prepare("SELECT id, username, password, id_roles FROM user WHERE username = ?");
+    $stmt = $conn->prepare("SELECT id, nama, username, password, id_roles FROM user WHERE username = ?");
     $stmt->bind_param("s", $username);
     $stmt->execute();
-
     $result = $stmt->get_result();
 
     if ($result->num_rows === 1) {
@@ -1050,7 +1435,8 @@ function login($data) {
         if (password_verify($password, $row['password'])) {
             // Simpan session
             $_SESSION['logged_in'] = true;
-            $_SESSION['user_id'] = $row['id'];
+            $_SESSION['id'] = $row['id'];
+            $_SESSION['nama'] = $row['nama'];
             $_SESSION['username'] = $row['username'];
             $_SESSION['id_roles'] = $row['id_roles'];
             return true;
@@ -1065,7 +1451,7 @@ function logout() {
     session_destroy();
     session_start(); // mulai sesi baru untuk flash message
     $_SESSION['logout_success'] = true;
-    header("Location: ../index.php");
+    header("Location: ../../index.php");
     exit;
 }
 ?>
