@@ -1,0 +1,117 @@
+body {
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+    padding-top: 65px;
+    padding-bottom: 70px;
+}
+
+/* Header */
+.app-header {
+    background-color: #0d6efd;
+    color: white;
+    padding: 0.8rem 1rem;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 1030;
+    border-bottom-left-radius: 14px;
+    border-bottom-right-radius: 14px;
+}
+.app-logo {
+    height: 40px;
+    border-radius: 8px;
+    background: #fff;
+    padding: 2px;
+}
+
+/* Konten */
+.app-content {
+    padding: 1rem 1.2rem;
+}
+
+/* Card kendaraan */
+.card-item {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    padding: 12px;
+    margin-bottom: 15px;
+    transition: 0.3s;
+    cursor: pointer;
+}
+.card-item:hover {
+    background-color: #f5f9ff;
+    transform: scale(1.01);
+}
+.card-top {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+.card-top img {
+    width: 80px;
+    height: 80px;
+    border-radius: 10px;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 2px solid #e5e5e5;
+}
+.card-top h6 {
+    margin: 0;
+    font-weight: 700;
+    color: #212529;
+}
+.card-top small {
+    color: #6c757d;
+}
+
+/* Detail dropdown */
+.card-details {
+    display: none;
+    padding-top: 8px;
+    margin-top: 10px;
+    border-top: 1px solid #e9ecef;
+    font-size: 0.9rem;
+    color: #444;
+}
+.card-details.active {
+    display: block;
+    animation: fadeIn 0.3s ease;
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Filter card */
+.filter-card {
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+/* Bottom Navigation */
+.bottom-nav {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background-color: #fff;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.08);
+    display: flex;
+    justify-content: space-around;
+    padding: 8px 0;
+}
+.nav-item-mobile {
+    text-align: center;
+    flex-grow: 1;
+    font-size: 0.8rem;
+    color: #6c757d;
+    text-decoration: none;
+}
+.nav-item-mobile.active,
+.nav-item-mobile:hover {
+    color: #0d6efd;
+}
+.nav-item-mobile i {
+    display: block;
+    font-size: 1.3rem;
+    margin-bottom: 3px;
+}

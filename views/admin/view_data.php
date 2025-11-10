@@ -3,12 +3,12 @@ session_start();
 require "../../functions/functions.php";
 
 if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['id_roles'], [3,4])) {
-    header("Location: ../index.php");
+    header("Location: ../../index.php");
     exit;
 }
 
 /* ------ Ambil & validasi parameter tipe halaman ------ */
-$allowedPages = ['user','kendaraan','pemakaian','pemakaianSelesai','divisi','roles','status','lokasi'];
+$allowedPages = ['user','kendaraan','pemakaian','history','divisi','roles','status','lokasi'];
 $page = isset($_GET['type']) ? $_GET['type'] : 'user';
 if (!in_array($page, $allowedPages, true)) {
     $page = 'user';
@@ -53,11 +53,11 @@ $colCount = 2; // No + Aksi
 if ($page == 'user') {
     $colCount += 4;
 } elseif ($page == 'kendaraan') {
-    $colCount += 9;
+    $colCount += 10;
 } elseif ($page == 'pemakaian') {
     $colCount += 4;
-} elseif ($page == 'pemakaianSelesai') {
-    $colCount += 5;
+} elseif ($page == 'history') {
+    $colCount += 6;
 } elseif ($page == 'divisi') {
     $colCount += 1;
 } elseif ($page == 'roles') {
@@ -81,14 +81,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['logout'])) {
     <title>View Data - Inventaris</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="../../assets/css/dashboard.css" rel="stylesheet">
+    <link href="../../assets/css/table.css" rel="stylesheet">
 </head>
 <body class="d-flex flex-column min-vh-100">
 
 <?php include "navbar.php"; ?>
-<?php include "sidebar.php"; ?>
 
-<div class="col-md-10 p-4">
+<div class="container-fluid p-4">
     <h2 class="mb-4 text-primary">📄 Data <?= htmlspecialchars(ucfirst($page), ENT_QUOTES, 'UTF-8') ?></h2>
+    <a href="dashboard.php" class="btn btn-secondary mb-3">← Kembali</a>
 
     <div class="card mb-4">
         <div class="card-header d-flex justify-content-between align-items-center">
@@ -97,12 +98,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['logout'])) {
                 <?php
                     $isSelesai = (int)($row['id_status'] ?? 0) === 5;
                     if ($page === 'pemakaian'): ?>
-                    <a href="view_Data.php?type=pemakaianSelesai" class="btn btn-secondary btn-sm">History</a>
+                    <a href="view_Data.php?type=history" class="btn btn-secondary btn-sm">History</a>
                     <a href="pengembalian.php" class="btn btn-primary btn-sm">Pengembalian</a>
                     <a href="tambah.php?type=<?= htmlspecialchars($page, ENT_QUOTES, 'UTF-8') ?>" class="btn btn-success btn-sm">
                     + Tambah <?= htmlspecialchars(ucfirst($page), ENT_QUOTES, 'UTF-8') ?>
                     </a>
-                    <?php elseif ($page === 'pemakaianSelesai') :?>
+                    <?php elseif ($page === 'history') :?>
                     <?php else: ?>
                     <a href="tambah.php?type=<?= htmlspecialchars($page, ENT_QUOTES, 'UTF-8') ?>" class="btn btn-success btn-sm">
                     + Tambah <?= htmlspecialchars(ucfirst($page), ENT_QUOTES, 'UTF-8') ?>
@@ -130,6 +131,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['logout'])) {
                                 <th>Divisi</th>
                                 <th>Roles</th>
                             <?php elseif ($page == 'kendaraan'): ?>
+                                <th>Gambar</th>
                                 <th>Plat Nomor</th>
                                 <th>Nomor STNK</th>
                                 <th>Bahan Bakar</th>
@@ -144,11 +146,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['logout'])) {
                                 <th>Peminjam</th>
                                 <th>Plat Nomor</th>
                                 <th>Status</th>
-                            <?php elseif ($page == 'pemakaianSelesai'): ?>
+                            <?php elseif ($page == 'history'): ?>
                                 <th>Tanggal Keluar</th>
                                 <th>Tanggal Masuk</th>
                                 <th>Peminjam</th>
                                 <th>Plat Nomor</th>
+                                <th>Kilometer Terakhir</th>
                                 <th>Status</th>
                             <?php elseif ($page == 'divisi'): ?>
                                 <th>Nama Divisi</th>
@@ -176,6 +179,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['logout'])) {
                                         <td><?= htmlspecialchars($row['nama_roles'], ENT_QUOTES, 'UTF-8') ?></td>
 
                                     <?php elseif ($page == 'kendaraan'): ?>
+                                        <td>
+                                            <a href="../../assets/images/kendaraan/<?= htmlspecialchars($row['gambar']) ?>" target="_blank">
+                                                <img src="../../assets/images/kendaraan/<?= htmlspecialchars($row['gambar']) ?>" 
+                                                    alt="Gambar Kendaraan" 
+                                                    class="img-thumbnail shadow-sm">
+                                            </a>
+                                        </td>
                                         <td><?= htmlspecialchars($row['plat_nomor'], ENT_QUOTES, 'UTF-8') ?></td>
                                         <td><?= htmlspecialchars($row['nomor_stnk'], ENT_QUOTES, 'UTF-8') ?></td>
                                         <td><?= htmlspecialchars($row['bahan_bakar'], ENT_QUOTES, 'UTF-8') ?></td>
@@ -192,11 +202,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['logout'])) {
                                         <td><?= htmlspecialchars($row['plat_nomor'], ENT_QUOTES, 'UTF-8') ?></td>
                                         <td><?= htmlspecialchars($row['nama_status'], ENT_QUOTES, 'UTF-8') ?></td>
 
-                                    <?php elseif ($page == 'pemakaianSelesai'): ?>
+                                    <?php elseif ($page == 'history'): ?>
                                         <td><?= htmlspecialchars($row['tanggal_keluar'], ENT_QUOTES, 'UTF-8') ?></td>
                                         <td><?= htmlspecialchars($row['tanggal_masuk'], ENT_QUOTES, 'UTF-8') ?></td>
                                         <td><?= htmlspecialchars($row['nama_user'], ENT_QUOTES, 'UTF-8') ?></td>
                                         <td><?= htmlspecialchars($row['plat_nomor'], ENT_QUOTES, 'UTF-8') ?></td>
+                                        <td><?= htmlspecialchars($row['kilometer'], ENT_QUOTES, 'UTF-8') ?></td>
                                         <td><?= htmlspecialchars($row['nama_status'], ENT_QUOTES, 'UTF-8') ?></td>
 
                                     <?php elseif ($page == 'divisi'): ?>
@@ -220,7 +231,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['logout'])) {
 
                                         <?php
                                         $isSelesai = (int)($row['id_status'] ?? 0) === 5;
-                                        if ($page === 'pemakaianSelesai' || ($page === 'pemakaian')): ?>
+                                        if ($page === 'history' || ($page === 'pemakaian')): ?>
                                             <a href="#"
                                                class="btn btn-warning btn-sm btn-edit-disabled"
                                                data-title="Tidak Bisa Edit!"

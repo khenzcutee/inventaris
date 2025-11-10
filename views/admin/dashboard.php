@@ -3,7 +3,7 @@ session_start();
 require "../../functions/functions.php";
 
 if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['id_roles'], [3,4])) {
-    header("Location: ../index.php");
+    header("Location: ../../index.php");
     exit;
 }
 
@@ -62,9 +62,8 @@ $pemakaian = getPemakaianLengkap();
 <body class="d-flex flex-column min-vh-100">
 
 <?php include "navbar.php"; ?>
-<?php include "sidebar.php"; ?>
 <!-- Main Content -->
-<div class="col-md-10 p-4">
+<div class="container-fluid p-4">
     <h2 class="mb-4 text-primary">📊 Dashboard Inventaris</h2>
 
     <!-- Cards Statistik -->

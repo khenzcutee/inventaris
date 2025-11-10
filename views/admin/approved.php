@@ -3,7 +3,7 @@ session_start();
 require "../../functions/functions.php";
 
 if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['id_roles'], [3,4])) {
-    header("Location: ../index.php");
+    header("Location: ../../index.php");
     exit;
 }
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['logout'])) {
@@ -50,9 +50,8 @@ $requests = getKendaraanRequestPending();
 </head>
 <body class="d-flex flex-column min-vh-100">
 <?php include "navbar.php"; ?>
-<?php include "sidebar.php"; ?>
 
-<div class="col-md-10 p-4">
+<div class="container-fluid p-4">
     <h2 class="mb-4 text-primary">✅ Daftar Request Kendaraan</h2>
     <a href="dashboard.php" class="btn btn-secondary mb-3">← Kembali</a>
 

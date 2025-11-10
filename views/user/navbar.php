@@ -1,43 +1,30 @@
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="dashboard.php">
-            <img src="../../assets/images/logo-maxi.jpg" alt="Logo">
-            Inventaris
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" 
-            data-bs-target="#navbarNav" aria-controls="navbarNav" 
-            aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav me-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="view_data.php">Data Pemakaian</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="request.php">Request</a>
-                </li>
-            </ul>
-            <form id="logoutForm" action="" method="post" class="d-flex">
-                <button id="btnLogout" class="btn btn-light btn-sm" type="button">Logout</button>
-                <input type="hidden" name="logout" value="1">
-            </form>
-        </div>
-    </div>
+<!-- Bottom Navigation Bar -->
+<nav class="bottom-nav">
+    <a href="dashboard.php" class="nav-item-mobile">
+        <i class="fas fa-home"></i><span>Home</span>
+    </a>
+    <a href="request.php" class="nav-item-mobile">
+        <i class="fas fa-plus-circle"></i><span>Request</span>
+    </a>
+    <a href="view_data.php?view=aktif" class="nav-item-mobile">
+        <i class="fas fa-table"></i><span>Pemakaian</span>
+    </a>
+    <a href="kendaraan.php" class="nav-item-mobile">
+        <i class="fas fa-car-side"></i><span>Daftar Kendaraan</span>
+    </a>
 </nav>
 
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-document.getElementById('btnLogout').addEventListener('click', function() {
+document.getElementById('logoutBtn').addEventListener('click', function (e) {
+    e.preventDefault();
     Swal.fire({
         title: 'Yakin ingin logout?',
-        text: "Anda akan keluar dari sistem!",
+        text: 'Sesi Anda akan berakhir.',
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#3085d6',
         cancelButtonColor: '#d33',
-        confirmButtonText: 'Ya, Logout',
+        confirmButtonText: 'Ya, logout!',
         cancelButtonText: 'Batal'
     }).then((result) => {
         if (result.isConfirmed) {
@@ -46,4 +33,7 @@ document.getElementById('btnLogout').addEventListener('click', function() {
     });
 });
 </script>
-
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// Fungsi toggleSidebar tidak diperlukan lagi karena sidebar di-hide di mobile
+</script>

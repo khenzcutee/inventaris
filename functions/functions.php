@@ -3,7 +3,7 @@
 $host = "localhost";
 $username = "root";
 $password = "";
-$database = "inventaris";
+$database = "inventaris2";
 $conn = mysqli_connect($host,$username,$password,$database);
 
 // CHECK CONNECTION
@@ -155,7 +155,7 @@ function getCountHistoryUser($table) {
     }
 
     $id_user = $_SESSION['id'];
-    $sql = "SELECT COUNT(*) as total FROM $table WHERE id_status IN (5,2) AND id_user = $id_user";
+    $sql = "SELECT COUNT(*) as total FROM $table WHERE id_status IN (5) AND id_user = $id_user";
     $result = mysqli_query($conn, $sql);
     
     if ($result) {
@@ -187,8 +187,13 @@ function getCountKendaraanTersedia($table) {
 }
 
 function uploadGambar($fileInputName = 'gambar') {
-    // Lokasi folder penyimpanan gambar
-    $targetDir = "../assets/images/kendaraan/";
+    // Lokasi folder penyimpanan gambar (gunakan path absolut)
+    $targetDir = __DIR__ . "/../assets/images/kendaraan/";
+
+    // Buat folder jika belum ada
+    if (!is_dir($targetDir)) {
+        mkdir($targetDir, 0777, true);
+    }
 
     // Ambil informasi file
     $fileName = $_FILES[$fileInputName]['name'];
@@ -198,23 +203,20 @@ function uploadGambar($fileInputName = 'gambar') {
 
     // Cek apakah ada file yang diupload
     if ($fileError === 4) {
-        // Tidak ada file yang diupload
-        return 'default.png'; // Bisa diganti default image
+        return 'default.png'; // Tidak ada file yang diupload
     }
 
-    // Ekstensi file
+    // Validasi ekstensi
     $fileExt = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
     $allowedExt = ['jpg', 'jpeg', 'png'];
-
-    // Validasi ekstensi
     if (!in_array($fileExt, $allowedExt)) {
         echo "<script>alert('Hanya boleh upload file JPG, JPEG, atau PNG!');</script>";
         return false;
     }
 
-    // Validasi ukuran (maksimal 2MB)
-    if ($fileSize > 2 * 1024 * 1024) {
-        echo "<script>alert('Ukuran file maksimal 2MB!');</script>";
+    // Validasi ukuran (maksimal 3MB)
+    if ($fileSize > 3 * 1024 * 1024) {
+        echo "<script>alert('Ukuran file maksimal 3MB!');</script>";
         return false;
     }
 
@@ -223,11 +225,11 @@ function uploadGambar($fileInputName = 'gambar') {
 
     // Pindahkan file ke folder tujuan
     if (!move_uploaded_file($fileTmp, $targetDir . $newFileName)) {
-        echo "<script>alert('Gagal mengupload gambar!');</script>";
+        echo "<script>alert('Gagal mengupload gambar! Pastikan folder bisa ditulis.');</script>";
         return false;
     }
 
-    return $newFileName; // Return nama file baru
+    return $newFileName;
 }
 
 function getDivisiOptions($selectedId = null) {
@@ -444,6 +446,109 @@ function getKendaraanRequestPending() {
     return $data;
 }
 
+function getKendaraanRequestPendingUser($userId, $search = '', $limit = 10, $offset = 0) {
+    global $conn;
+
+    $sql = "SELECT 
+                r.id AS request_id,
+                r.tanggal_request,
+                k.plat_nomor,
+                k.merek,
+                k.gambar,
+                k.jenis_kendaraan,
+                k.warna,
+                l.nama_lokasi,
+                s.nama_status
+            FROM request r
+            JOIN kendaraan k ON r.id_kendaraan = k.id
+            JOIN lokasi l ON k.id_lokasi = l.id
+            JOIN status s ON r.id_status = s.id
+            WHERE r.id_user = ? 
+              AND r.id_status = 8"; // 8 = Pending
+
+    // Tambahkan filter pencarian jika ada
+    if (!empty($search)) {
+        $sql .= " AND (k.plat_nomor LIKE ? OR k.merek LIKE ? OR l.nama_lokasi LIKE ?)";
+    }
+
+    $sql .= " ORDER BY r.id DESC LIMIT ? OFFSET ?";
+
+    $stmt = mysqli_prepare($conn, $sql);
+    if (!$stmt) {
+        die("Query Error: " . mysqli_error($conn));
+    }
+
+    if (!empty($search)) {
+        $searchLike = "%$search%";
+        // 6 parameter total → userId (i), searchLike (s), searchLike (s), searchLike (s), limit (i), offset (i)
+        mysqli_stmt_bind_param($stmt, "isssii", $userId, $searchLike, $searchLike, $searchLike, $limit, $offset);
+    } else {
+        // Tanpa search → hanya userId, limit, offset
+        mysqli_stmt_bind_param($stmt, "iii", $userId, $limit, $offset);
+    }
+
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+
+    $data = [];
+    if ($result) {
+        while ($row = mysqli_fetch_assoc($result)) {
+            // Pastikan gambar ada, beri fallback jika null
+            if (empty($row['gambar'])) {
+                $row['gambar'] = 'default.png';
+            }
+            $data[] = $row;
+        }
+    }
+
+    mysqli_stmt_close($stmt);
+
+    return $data;
+}
+
+// Ambil semua lokasi
+function getAllLokasiOptions() {
+    global $conn;
+    $result = $conn->query("SELECT id, nama_lokasi FROM lokasi ORDER BY nama_lokasi ASC");
+    $options = '';
+    while ($row = $result->fetch_assoc()) {
+        $options .= "<option value='{$row['id']}'>{$row['nama_lokasi']}</option>";
+    }
+    return $options;
+}
+
+// Ambil jenis kendaraan berdasarkan lokasi
+function getJenisKendaraanByLokasi($id_lokasi) {
+    global $conn;
+    $stmt = $conn->prepare("SELECT DISTINCT jenis_kendaraan FROM kendaraan WHERE id_lokasi = ?");
+    $stmt->bind_param("i", $id_lokasi);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    $options = "<option value=''>-- Pilih Jenis Kendaraan --</option>";
+    while ($row = $result->fetch_assoc()) {
+        $jenis = htmlspecialchars($row['jenis_kendaraan']);
+        $options .= "<option value='$jenis'>$jenis</option>";
+    }
+    return $options;
+}
+
+function getKendaraanByLokasiJenis($id_lokasi, $jenis_kendaraan) {
+    global $conn;
+    $stmt = $conn->prepare("SELECT id, plat_nomor, merek FROM kendaraan WHERE id_lokasi = ? AND jenis_kendaraan = ?");
+    $stmt->bind_param("is", $id_lokasi, $jenis_kendaraan);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    $options = "<option value=''>-- Pilih Kendaraan --</option>";
+    while ($row = $result->fetch_assoc()) {
+        $id = (int)$row['id'];
+        $label = htmlspecialchars($row['merek'] . " - " . $row['plat_nomor']);
+        $options .= "<option value='$id'>$label</option>";
+    }
+    return $options;
+}
+
 function getKendaraanRequestList($selectedId = null) {
     global $conn;
 
@@ -485,17 +590,30 @@ function getAllKendaraanOptions($selectedId = null) {
     return $html;
 }
 
+function getAllLokasi() {
+    global $conn;
+    $res = mysqli_query($conn, "SELECT * FROM lokasi ORDER BY nama_lokasi ASC");
+    return mysqli_fetch_all($res, MYSQLI_ASSOC);
+}
+
+function getAllJenisKendaraan() {
+    global $conn;
+    $res = mysqli_query($conn, "SELECT DISTINCT jenis_kendaraan FROM kendaraan ORDER BY jenis_kendaraan ASC");
+    return mysqli_fetch_all($res, MYSQLI_ASSOC);
+}
+
 function getPemakaianSedangDipakaiOptions() {
     global $conn;
-    $sql = "SELECT p.id, k.plat_nomor, u.nama
+    $sql = "SELECT p.id, k.plat_nomor, u.nama, k.kilometer
             FROM pemakaian p
-            INNER JOIN kendaraan k ON p.id_inventaris = k.id
-            INNER JOIN `user` u ON p.id_user = u.id
-            WHERE p.id_status = 2";
+            JOIN kendaraan k ON p.id_inventaris = k.id
+            JOIN user u ON p.id_user = u.id
+            WHERE p.id_status = 2"; // sedang dipakai
+
     $res = mysqli_query($conn, $sql);
-    $options = '';
+    $options = "";
     while ($row = mysqli_fetch_assoc($res)) {
-        $options .= "<option value='{$row['id']}'>
+        $options .= "<option value='{$row['id']}' data-km='{$row['kilometer']}'>
                         {$row['plat_nomor']} - {$row['nama']}
                      </option>";
     }
@@ -530,13 +648,12 @@ function tambahKendaraan($data, $files) {
     $kilometer       = (int)$data['kilometer'];
     $id_lokasi       = (int)$data['id_lokasi'];
     $id_status       = (int)$data['id_status'];
-    $user_id         = $_SESSION['user_id'];
+    $user_id         = $_SESSION['id'];
 
     $gambar = uploadGambar('gambar'); 
     if ($gambar === false) {
         return false; // Jika gagal upload, hentikan proses
     }
-
     // ✅ Query Insert
     $query = "INSERT INTO kendaraan (
                 plat_nomor, nomor_stnk, bahan_bakar, warna, jenis_kendaraan, merek, kilometer, gambar, id_lokasi, id_status, created_at, updated_at, created_by, updated_by
@@ -554,7 +671,7 @@ function tambahPemakaian($data) {
     $id_inventaris  = (int)$data['id_inventaris']; // ini harus sesuai dengan id kendaraan
     $tanggal_keluar = mysqli_real_escape_string($conn, $data['tanggal_keluar']);
     $id_status      = (int)$data['id_status']; // status baru untuk kendaraan
-    $user_id        = (int)$_SESSION['user_id'];
+    $user_id        = (int)$_SESSION['id'];
 
     // Mulai transaksi supaya aman
     mysqli_begin_transaction($conn);
@@ -692,28 +809,45 @@ function rejectRequest($id_request) {
     return true;
 }
 
-function prosesPengembalian($id_pemakaian, $tanggal_masuk) {
+function prosesPengembalian($id_pemakaian, $tanggal_masuk, $kilometer_akhir) {
     global $conn;
     mysqli_begin_transaction($conn);
 
-    // Ambil id kendaraan
-    $q = mysqli_query($conn, "SELECT id_inventaris FROM pemakaian WHERE id=$id_pemakaian");
+    // Ambil id kendaraan + km awal
+    $q = mysqli_query($conn, "
+        SELECT p.id_inventaris, k.kilometer AS km_awal 
+        FROM pemakaian p 
+        JOIN kendaraan k ON p.id_inventaris = k.id 
+        WHERE p.id = " . (int)$id_pemakaian
+    );
     if (!$q || mysqli_num_rows($q) === 0) {
         mysqli_rollback($conn);
         return false;
     }
+
     $row = mysqli_fetch_assoc($q);
     $id_kendaraan = (int)$row['id_inventaris'];
+    $km_awal = (int)$row['km_awal'];
 
-    // Update pemakaian (tanggal_masuk + status selesai = 5)
-    $sql1 = "UPDATE pemakaian SET tanggal_masuk='$tanggal_masuk', id_status=5 WHERE id=$id_pemakaian";
+    // ✅ Validasi km akhir (tidak boleh lebih kecil atau sama)
+    if ($kilometer_akhir <= $km_awal) {
+        mysqli_rollback($conn);
+        return false;
+    }
+
+    // Update pemakaian
+    $sql1 = "UPDATE pemakaian 
+             SET tanggal_masuk='" . mysqli_real_escape_string($conn, $tanggal_masuk) . "', id_status=5 
+             WHERE id=$id_pemakaian";
     if (!mysqli_query($conn, $sql1)) {
         mysqli_rollback($conn);
         return false;
     }
 
-    // Update kendaraan jadi Tersedia (status = 1)
-    $sql2 = "UPDATE kendaraan SET id_status=1 WHERE id=$id_kendaraan";
+    // Update kendaraan
+    $sql2 = "UPDATE kendaraan 
+             SET kilometer=$kilometer_akhir, id_status=1 
+             WHERE id=$id_kendaraan";
     if (!mysqli_query($conn, $sql2)) {
         mysqli_rollback($conn);
         return false;
@@ -726,7 +860,7 @@ function prosesPengembalian($id_pemakaian, $tanggal_masuk) {
 function tambahDivisi($data) {
     global $conn;
     $nama_divisi = htmlspecialchars($data['nama_divisi']);
-    $user_id = $_SESSION['user_id'];
+    $user_id = $_SESSION['id'];
 
     $query = "INSERT INTO divisi (nama_divisi, created_at, updated_at, created_by, updated_by)
               VALUES ('$nama_divisi', NOW(), NOW(), $user_id, $user_id)";
@@ -738,7 +872,7 @@ function tambahLokasi($data) {
     global $conn;
     $nama_lokasi = htmlspecialchars($data['nama_lokasi']);
     $alamat = htmlspecialchars($data['alamat']);
-    $user_id = $_SESSION['user_id'];
+    $user_id = $_SESSION['id'];
 
     $query = "INSERT INTO lokasi (nama_lokasi, alamat, created_At, updated_at, created_by, updated_by)
               VALUES ('$nama_lokasi', '$alamat', NOW(), NOW(), $user_id, $user_id)";
@@ -750,7 +884,7 @@ function tambahLokasi($data) {
 function tambahRoles($data) {
     global $conn;
     $nama_roles = htmlspecialchars($data['nama_roles']);
-    $user_id = $_SESSION['user_id'];
+    $user_id = $_SESSION['id'];
 
     $query = "INSERT INTO roles (nama_roles, created_at, updated_at, created_by, updated_by)
               VALUES ('$nama_roles', NOW(), NOW(), $user_id, $user_id)";
@@ -761,7 +895,7 @@ function tambahRoles($data) {
 function tambahStatus($data) {
     global $conn;
     $nama_status = htmlspecialchars($data['nama_status']);
-    $user_id = $_SESSION['user_id'];
+    $user_id = $_SESSION['id'];
 
     $query = "INSERT INTO status (nama_status, created_at, updated_at, created_by, updated_by)
               VALUES ('$nama_status', NOW(), NOW(), $user_id, $user_id)";
@@ -772,7 +906,7 @@ function tambahStatus($data) {
 function getPaginatedData($type, $search = '', $limit = 10, $offset = 0) {
     global $conn;
 
-    $allowed = ['user','kendaraan','pemakaian','pemakaianSelesai','divisi','roles','status','lokasi'];
+    $allowed = ['user','kendaraan','pemakaian','history','divisi','roles','status','lokasi'];
     if (!in_array($type, $allowed, true)) return [];
 
     $conds = []; // array kondisi
@@ -785,7 +919,7 @@ function getPaginatedData($type, $search = '', $limit = 10, $offset = 0) {
             $conds[] = "(u.nama LIKE '%$s%' OR u.username LIKE '%$s%')";
         } elseif ($type === 'kendaraan') {
             $conds[] = "(k.plat_nomor LIKE '%$s%' OR k.merek LIKE '%$s%' OR k.nomor_stnk LIKE '%$s%')";
-        } elseif ($type === 'pemakaian' || $type === 'pemakaianSelesai') {
+        } elseif ($type === 'pemakaian' || $type === 'history') {
             $conds[] = "(u.nama LIKE '%$s%' OR k.plat_nomor LIKE '%$s%')";
         } elseif ($type === 'divisi') {
             $conds[] = "(nama_divisi LIKE '%$s%')";
@@ -833,10 +967,10 @@ function getPaginatedData($type, $search = '', $limit = 10, $offset = 0) {
                 ORDER BY p.id DESC
                 LIMIT $limit OFFSET $offset";
 
-    } elseif ($type === 'pemakaianSelesai') {
+    } elseif ($type === 'history') {
         $baseConds = array_merge(["p.id_status = 5"], $conds);
         $where = 'WHERE '.implode(' AND ', $baseConds);
-        $sql = "SELECT p.*, u.nama AS nama_user, k.plat_nomor, s.nama_status
+        $sql = "SELECT p.*, u.nama AS nama_user, k.plat_nomor, k.kilometer,s.nama_status
                 FROM pemakaian p
                 JOIN user u ON p.id_user = u.id
                 JOIN kendaraan k ON p.id_inventaris = k.id
@@ -874,7 +1008,7 @@ function getUserPemakaianAktif($userId, $search = '', $limit = 10, $offset = 0) 
 
     $where = 'WHERE ' . implode(' AND ', $conds);
 
-    $sql = "SELECT p.*, k.plat_nomor, s.nama_status
+    $sql = "SELECT p.*, k.plat_nomor, k.gambar, k.warna, k.jenis_kendaraan, s.nama_status
             FROM pemakaian p
             JOIN kendaraan k ON p.id_inventaris = k.id
             JOIN status s ON p.id_status = s.id
@@ -919,7 +1053,7 @@ function getUserPemakaianAktifCount($userId, $search = '') {
 function getUserPemakaianHistory($userId, $search = '', $limit = 10, $offset = 0) {
     global $conn;
 
-    $conds = ["p.id_user = " . (int)$userId, "p.id_status IN (5,7)"];
+    $conds = ["p.id_user = " . (int)$userId, "p.id_status IN (5)"];
 
     if ($search !== '') {
         $s = mysqli_real_escape_string($conn, $search);
@@ -928,7 +1062,7 @@ function getUserPemakaianHistory($userId, $search = '', $limit = 10, $offset = 0
 
     $where = 'WHERE ' . implode(' AND ', $conds);
 
-    $sql = "SELECT p.*, k.plat_nomor, s.nama_status
+    $sql = "SELECT p.*, k.plat_nomor, k.gambar, k.warna, k.jenis_kendaraan, s.nama_status
             FROM pemakaian p
             JOIN kendaraan k ON p.id_inventaris = k.id
             JOIN status s ON p.id_status = s.id
@@ -949,7 +1083,7 @@ function getUserPemakaianHistory($userId, $search = '', $limit = 10, $offset = 0
 function getUserPemakaianHistoryCount($userId, $search = '') {
     global $conn;
 
-    $conds = ["p.id_user = " . (int)$userId, "p.id_status IN (5,7)"];
+    $conds = ["p.id_user = " . (int)$userId, "p.id_status IN (5)"];
 
     if ($search !== '') {
         $s = mysqli_real_escape_string($conn, $search);
@@ -972,7 +1106,7 @@ function getUserPemakaianHistoryCount($userId, $search = '') {
 function getTotalRows($type, $search = '') {
     global $conn;
 
-    $allowed = ['user','kendaraan','pemakaian','pemakaianSelesai','divisi','roles','status','lokasi'];
+    $allowed = ['user','kendaraan','pemakaian','history','divisi','roles','status','lokasi'];
     if (!in_array($type, $allowed, true)) return 0;
 
     $conds = [];
@@ -982,7 +1116,7 @@ function getTotalRows($type, $search = '') {
             $conds[] = "(u.nama LIKE '%$s%' OR u.username LIKE '%$s%')";
         } elseif ($type === 'kendaraan') {
             $conds[] = "(k.plat_nomor LIKE '%$s%' OR k.merek LIKE '%$s%' OR k.nomor_stnk LIKE '%$s%')";
-        } elseif ($type === 'pemakaian' || $type === 'pemakaianSelesai') {
+        } elseif ($type === 'pemakaian' || $type === 'history') {
             $conds[] = "(u.nama LIKE '%$s%' OR k.plat_nomor LIKE '%$s%')";
         } elseif ($type === 'divisi') {
             $conds[] = "(nama_divisi LIKE '%$s%')";
@@ -1021,7 +1155,7 @@ function getTotalRows($type, $search = '') {
                 JOIN status s ON p.id_status = s.id
                 $where";
 
-    } elseif ($type === 'pemakaianSelesai') {
+    } elseif ($type === 'history') {
         $baseConds = array_merge(["p.id_status = 5"], $conds);
         $where = 'WHERE '.implode(' AND ', $baseConds);
         $sql = "SELECT COUNT(*) AS total
@@ -1103,7 +1237,7 @@ function getDataView($page) {
     else if ($page == 'kendaraan') {
         $sql = "SELECT k.id, k.plat_nomor, k.nomor_stnk, k.bahan_bakar,
                        k.warna, k.jenis_kendaraan, k.merek, k.kilometer,
-                       l.nama_lokasi, s.nama_status
+                       k.gambar, l.nama_lokasi, s.nama_status
                 FROM kendaraan k
                 INNER JOIN lokasi l ON k.id_lokasi = l.id
                 INNER JOIN status s ON k.id_status = s.id";
@@ -1117,7 +1251,7 @@ function getDataView($page) {
             WHERE p.id_status NOT IN (5,7,6)
             ORDER BY tanggal_keluar DESC";
     }
-    else if ($page == 'pemakaianSelesai') {
+    else if ($page == 'history') {
     $sql = "SELECT p.id, u.nama AS nama_user, k.plat_nomor, p.tanggal_keluar, p.tanggal_masuk, s.nama_status
             FROM pemakaian p
             INNER JOIN `user` u ON p.id_user = u.id
@@ -1169,7 +1303,7 @@ function getDetailData($type, $id) {
     } elseif ($type == 'kendaraan') {
         $sql = "SELECT k.id, k.plat_nomor, k.nomor_stnk, k.bahan_bakar, k.warna,
                        k.jenis_kendaraan, k.merek, k.kilometer, l.nama_lokasi, s.nama_status,
-                       k.created_at, k.updated_at
+                       k.created_at, k.updated_at, k.gambar
                 FROM kendaraan k
                 INNER JOIN lokasi l ON k.id_lokasi = l.id
                 INNER JOIN status s ON k.id_status = s.id
@@ -1182,7 +1316,7 @@ function getDetailData($type, $id) {
                 INNER JOIN kendaraan k ON p.id_inventaris = k.id
                 INNER JOIN status s ON p.id_status = s.id
                 WHERE p.id = $id";
-    } elseif ($type == 'pemakaianSelesai') {
+    } elseif ($type == 'history') {
         $sql = "SELECT p.id, u.nama AS nama_user, k.plat_nomor, p.tanggal_keluar, p.tanggal_masuk, 
                        s.nama_status, p.created_at, p.updated_at
                 FROM pemakaian p
@@ -1425,6 +1559,10 @@ function login($data) {
     $password = trim($data['password']);
 
     $stmt = $conn->prepare("SELECT id, nama, username, password, id_roles FROM user WHERE username = ?");
+if (!$stmt) {
+    die("Query prepare gagal: " . $conn->error);
+}
+
     $stmt->bind_param("s", $username);
     $stmt->execute();
     $result = $stmt->get_result();

@@ -3,7 +3,7 @@ session_start();
 require "../../functions/functions.php";
 
 if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['id_roles'], [3,4])) {
-    header("Location: ../index.php");
+    header("Location: ../../index.php");
     exit;
 }
 
@@ -23,6 +23,17 @@ if (!$data) {
 
 // Proses update
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Jika ada upload gambar baru
+    if ($type == 'kendaraan' && isset($_FILES['gambar']) && $_FILES['gambar']['error'] === 0) {
+        $gambarBaru = uploadGambar('gambar');
+        if ($gambarBaru) {
+            $_POST['gambar'] = $gambarBaru;
+        }
+    } else {
+        // Gunakan gambar lama jika tidak ada upload baru
+        $_POST['gambar'] = $data['gambar'] ?? 'default.png';
+    }
+
     $result = updateData($type, $id, $_POST);
 
     if ($result === true) {
@@ -37,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['flash'] = [
             'icon'  => 'warning',
             'title' => 'Tidak Bisa Diubah',
-            'text'  => 'Pemakaian Yang Sudah Selesai Tidak Dapat di Edit Kembali'
+            'text'  => 'Pemakaian yang sudah selesai tidak dapat diubah kembali.'
         ];
         header("Location: edit.php?type=$type&id=$id");
         exit;
@@ -45,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['flash'] = [
             'icon'  => 'error',
             'title' => 'Gagal',
-            'text'  => 'Gagal mengubah data.'
+            'text'  => 'Terjadi kesalahan saat mengubah data.'
         ];
         header("Location: edit.php?type=$type&id=$id");
         exit;
@@ -62,16 +73,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body class="d-flex flex-column min-vh-100">
 <?php include "navbar.php"; ?>
-<?php include "sidebar.php"; ?>
 
-<div class="col-md-10 p-4">
+<div class="container-fluid p-4">
     <h2 class="mb-4 text-primary">✏️ Edit <?= ucfirst($type) ?></h2>
     <a href="view_Data.php?type=<?= $type ?>" class="btn btn-secondary mb-3">← Kembali</a>
 
     <div class="card shadow-sm">
         <div class="card-header bg-primary text-white">Form Edit <?= ucfirst($type) ?></div>
         <div class="card-body">
-            <form method="POST">
+            <form method="POST" enctype="multipart/form-data">
                 <?php if ($type == 'user'): ?>
                     <div class="mb-3">
                         <label>Nama</label>
@@ -95,47 +105,69 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
 
                 <?php elseif ($type == 'kendaraan'): ?>
-                    <div class="mb-3">
-                        <label>Plat Nomor</label>
-                        <input type="text" name="plat_nomor" class="form-control" value="<?= htmlspecialchars($data['plat_nomor']) ?>" required>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label>Plat Nomor</label>
+                                <input type="text" name="plat_nomor" class="form-control" value="<?= htmlspecialchars($data['plat_nomor']) ?>" required>
+                            </div>
+                            <div class="mb-3">
+                                <label>Nomor STNK</label>
+                                <input type="text" name="nomor_stnk" class="form-control" value="<?= htmlspecialchars($data['nomor_stnk']) ?>" required>
+                            </div>
+                            <div class="mb-3">
+                                <label>Bahan Bakar</label>
+                                <input type="text" name="bahan_bakar" class="form-control" value="<?= htmlspecialchars($data['bahan_bakar']) ?>" required>
+                            </div>
+                            <div class="mb-3">
+                                <label>Warna</label>
+                                <input type="text" name="warna" class="form-control" value="<?= htmlspecialchars($data['warna']) ?>" required>
+                            </div>
+                            <div class="mb-3">
+                                <label>Jenis Kendaraan</label>
+                                <input type="text" name="jenis_kendaraan" class="form-control" value="<?= htmlspecialchars($data['jenis_kendaraan']) ?>" required>
+                            </div>
+                            <div class="mb-3">
+                                <label>Merek</label>
+                                <input type="text" name="merek" class="form-control" value="<?= htmlspecialchars($data['merek']) ?>" required>
+                            </div>
+                            <div class="mb-3">
+                                <label>Kilometer</label>
+                                <input type="number" name="kilometer" class="form-control" value="<?= htmlspecialchars($data['kilometer']) ?>" required>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Gambar Saat Ini</label><br>
+                                <?php if (!empty($data['gambar'])): ?>
+                                    <a href="../../assets/images/kendaraan/<?= htmlspecialchars($data['gambar']) ?>" target="_blank">
+                                        <img src="../../assets/images/kendaraan/<?= htmlspecialchars($data['gambar']) ?>" 
+                                             alt="Gambar Kendaraan"
+                                             width="200"
+                                             class="img-thumbnail shadow-sm mb-2">
+                                    </a>
+                                <?php else: ?>
+                                    <p class="text-muted">Belum ada gambar.</p>
+                                <?php endif; ?>
+                                <label class="form-label mt-2">Ganti Gambar (Opsional)</label>
+                                <input type="file" name="gambar" class="form-control">
+                            </div>
+                            <div class="mb-3">
+                                <label>Lokasi</label>
+                                <select name="id_lokasi" class="form-control">
+                                    <?= getLokasiOptions($data['id_lokasi']); ?>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label>Status</label>
+                                <select name="id_status" class="form-control">
+                                    <?= getStatusOptions($data['id_status']); ?>
+                                </select>
+                            </div>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label>Nomor STNK</label>
-                        <input type="text" name="nomor_stnk" class="form-control" value="<?= htmlspecialchars($data['nomor_stnk']) ?>" required>
-                    </div>
-                    <div class="mb-3">
-                        <label>Bahan Bakar</label>
-                        <input type="text" name="bahan_bakar" class="form-control" value="<?= htmlspecialchars($data['bahan_bakar']) ?>" required>
-                    </div>
-                    <div class="mb-3">
-                        <label>Warna</label>
-                        <input type="text" name="warna" class="form-control" value="<?= htmlspecialchars($data['warna']) ?>" required>
-                    </div>
-                    <div class="mb-3">
-                        <label>Jenis Kendaraan</label>
-                        <input type="text" name="jenis_kendaraan" class="form-control" value="<?= htmlspecialchars($data['jenis_kendaraan']) ?>" required>
-                    </div>
-                    <div class="mb-3">
-                        <label>Merek</label>
-                        <input type="text" name="merek" class="form-control" value="<?= htmlspecialchars($data['merek']) ?>" required>
-                    </div>
-                    <div class="mb-3">
-                        <label>Kilometer</label>
-                        <input type="number" name="kilometer" class="form-control" value="<?= htmlspecialchars($data['kilometer']) ?>" required>
-                    </div>
-                    <div class="mb-3">
-                        <label>Lokasi</label>
-                        <select name="id_lokasi" class="form-control">
-                            <?= getLokasiOptions($data['id_lokasi']); ?>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label>Status</label>
-                        <select name="id_status" class="form-control">
-                            <?= getStatusOptions($data['id_status']); ?>
-                        </select>
-                    </div>
-                    
+
                 <?php elseif ($type == 'divisi'): ?>
                     <div class="mb-3">
                         <label>Nama Divisi</label>
@@ -165,11 +197,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
                 <?php endif; ?>
 
-                <button type="submit" class="btn btn-success">Simpan Perubahan</button>
+                <button type="submit" class="btn btn-success mt-3">💾 Simpan Perubahan</button>
             </form>
         </div>
     </div>
 </div>
+
 <?php include "script.php"; ?>
 </body>
 </html>

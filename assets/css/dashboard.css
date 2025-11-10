@@ -42,3 +42,12 @@
 .navbar-brand img {
     height: 40px;
 }
+
+.form img {
+    max-width: 200px;         /* batasi lebar gambar */
+    height: auto;            /* pertahankan proporsi */
+    border-radius: 8px;      /* sudut lembut biar modern */
+    object-fit: cover;       /* potong bagian berlebih */
+    display: block;
+    margin: auto;            /* posisikan di tengah kolom */
+}

@@ -9,7 +9,7 @@
             <a href="view_data.php?type=lokasi">Lokasi</a>
             <a href="view_data.php?type=pemakaian">Pemakaian</a>
             <a href="pengembalian.php">Pengembalian</a>
-            <a href="view_data.php?type=pemakaianSelesai">History Pemakaian</a>
+            <a href="view_data.php?type=history">History Pemakaian</a>
             <a href="request.php">Request</a>
             <a href="approved.php">Approval</a>
         </div>

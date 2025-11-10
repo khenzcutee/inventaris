@@ -3,7 +3,7 @@ session_start();
 require "../../functions/functions.php";
 
 if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['id_roles'], [3])) {
-    header("Location: ../index.php");
+    header("Location: ../../index.php");
     exit;
 }
 
@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', function() {
         text: '<?= $status['text'] ?>'
     }).then(() => {
         <?php if ($status['icon'] === 'success'): ?>
-            window.location.href = 'view_Data.php?type=<?= $type ?>';
+            window.location.href = 'view_data.php?type=<?= $type ?>';
         <?php endif; ?>
     });
 });
@@ -62,10 +62,9 @@ document.addEventListener('DOMContentLoaded', function() {
 <body class="d-flex flex-column min-vh-100">
 <?php include "navbar.php"; ?>
 <div class="d-flex">
-    <?php include "sidebar.php"; ?>
 
     <!-- Main Content -->
-    <div class="col-md-10 p-4">
+    <div class="container-fluid p-4">
         <h2 class="mb-4 text-primary">➕ Tambah <?= ucfirst($type) ?></h2>
         <a href="view_Data.php?type=<?= $type ?>" class="btn btn-secondary mb-3">← Kembali</a>
 

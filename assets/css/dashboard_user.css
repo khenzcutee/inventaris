@@ -1,0 +1,195 @@
+body {
+            background-color: #f5f6fa;
+            font-family: 'Poppins', sans-serif;
+            padding-top: 60px;
+            padding-bottom: 80px;
+        }
+
+        /* Header */
+.app-header {
+    background-color: #0d6efd;
+    color: white;
+    padding: 0.8rem 1rem;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1030;
+    border-bottom-left-radius: 14px;
+    border-bottom-right-radius: 14px;
+}
+
+/* Logo styling */
+.app-logo {
+    height: 40px;
+    width: auto;
+    border-radius: 8px;
+    object-fit: contain;
+    background-color: white; /* optional: jika logo transparan */
+    padding: 2px;
+}
+
+/* Responsif agar tetap rapih di layar kecil */
+@media (max-width: 480px) {
+    .app-header {
+        padding: 0.7rem 0.8rem;
+    }
+    .app-logo {
+        height: 34px;
+    }
+    .app-header h1 {
+        font-size: 0.95rem;
+    }
+}
+
+        /* Konten utama */
+        .app-content {
+            padding: 1rem 1.2rem;
+        }
+
+        /* Tombol Request */
+        .btn-success {
+            background-color: #10b981 !important;
+            border: none !important;
+            border-radius: 12px;
+            font-weight: 600;
+            padding: 12px;
+            width: 100%;
+            box-shadow: 0 4px 12px rgba(16,185,129,0.3);
+            transition: all 0.25s ease;
+        }
+        .btn-success:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 18px rgba(16,185,129,0.5);
+        }
+
+        /* Card Statistik */
+        .stats-card {
+            border: none;
+            border-radius: 15px;
+            text-align: center;
+            color: white;
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            margin: 0 0.2rem;
+        }
+        .stats-card:hover {
+            transform: scale(1.03);
+        }
+        .stats-card h3 {
+            font-weight: 700;
+            margin-bottom: 0.2rem;
+        }
+        .stats-card p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        .card-request { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+        .card-pemakaian { background: linear-gradient(135deg, #facc15, #eab308); color: #222; }
+        .card-history { background: linear-gradient(135deg, #22c55e, #16a34a); }
+
+        /* History Card */
+        .history-card {
+            border-radius: 15px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+            border: none;
+            background: #fff;
+            padding: 0.5rem 0.8rem;
+        }
+        .history-card .card-header {
+            border-radius: 15px 15px 0 0;
+            font-weight: 600;
+        }
+
+        /* ================== RESPONSIVE (MOBILE) ================== */
+@media (max-width: 768px) {
+    .sidebar { display: none !important; }
+    .col-md-10 { width: 100%; margin-left: 0; padding: 0 !important; }
+    .app-content { padding: 1rem; }
+
+    /* Table → Card List */
+    table {
+        display: block;
+        width: 100%;
+    }
+    thead { display: none; }
+
+    tbody {
+        display: block;
+        width: 100%;
+    }
+
+    tbody tr {
+        display: block;
+        width: 100%;
+        background: white;
+        margin-bottom: 15px;
+        border-radius: 12px;
+        box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+        border: none;
+        padding: 0;
+    }
+
+    tbody td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        padding: 10px 14px;
+        font-size: 0.95rem;
+        border-top: 1px solid #f1f1f1;
+        box-sizing: border-box;
+    }
+
+    /* biar konten full sampai kanan */
+    tbody td span {
+        flex-grow: 1;
+        text-align: right;
+        word-break: break-word;
+        color: #333;
+    }
+
+    tbody td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: #555;
+        flex-basis: 45%;
+        text-align: left;
+    }
+
+    tbody tr:first-child td:first-child {
+        border-top: none;
+    }
+}
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #fff;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            z-index: 1030;
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0;
+            border-top-left-radius: 14px;
+            border-top-right-radius: 14px;
+        }
+        .nav-item-mobile {
+            text-align: center;
+            flex-grow: 1;
+            font-size: 0.7rem;
+            color: #6c757d;
+            text-decoration: none;
+        }
+        .nav-item-mobile:hover,
+        .nav-item-mobile.active {
+            color: #0d6efd;
+        }
+        .nav-item-mobile i {
+            display: block;
+            font-size: 1.4rem;
+            margin-bottom: 3px;
+        }

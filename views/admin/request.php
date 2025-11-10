@@ -3,27 +3,38 @@ session_start();
 require "../../functions/functions.php";
 
 if (!isset($_SESSION['logged_in']) || !in_array($_SESSION['id_roles'], [3,4,5])) {
-    header("Location: ../index.php");
-    exit;
-}
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['logout'])) {
-    logout(); // Panggil function logout() yang sudah kamu punya
+    header("Location: ../../index.php");
     exit;
 }
 
-$user_id = $_SESSION['user_id'] ?? 0;
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['logout'])) {
+    logout();
+    exit;
+}
+
+$user_id = $_SESSION['id'] ?? 0;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $id_kendaraan = (int)$_POST['id_kendaraan'];
+    $id_kendaraan_list = $_POST['id_kendaraan'] ?? [];
 
-    $result = requestKendaraan($user_id, $id_kendaraan);
-    if ($result === true) {
-        $_SESSION['flash'] = ['icon'=>'success','title'=>'Berhasil','text'=>'Request berhasil dikirim!'];
-    } elseif ($result === 'duplicate') {
-        $_SESSION['flash'] = ['icon'=>'warning','title'=>'Sudah Ada','text'=>'Anda sudah mengirim request untuk kendaraan ini!'];
-    } else {
-        $_SESSION['flash'] = ['icon'=>'error','title'=>'Error','text'=>'Terjadi kesalahan!'];
+    $success = $duplicate = $error = 0;
+    foreach ($id_kendaraan_list as $id_kendaraan) {
+        $id_kendaraan = (int)$id_kendaraan;
+        if ($id_kendaraan > 0) {
+            $result = requestKendaraan($user_id, $id_kendaraan);
+            if ($result === true) $success++;
+            elseif ($result === 'duplicate') $duplicate++;
+            else $error++;
+        }
     }
+
+    if ($success > 0)
+        $_SESSION['flash'] = ['icon'=>'success','title'=>'Berhasil','text'=>"$success request berhasil dikirim!"];
+    elseif ($duplicate > 0)
+        $_SESSION['flash'] = ['icon'=>'warning','title'=>'Sudah Ada','text'=>"$duplicate kendaraan sudah pernah direquest!"];
+    else
+        $_SESSION['flash'] = ['icon'=>'error','title'=>'Error','text'=>'Terjadi kesalahan saat mengirim request!'];
+
     header("Location: request.php");
     exit;
 }
@@ -38,14 +49,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body class="d-flex flex-column min-vh-100">
 <?php include "navbar.php"; ?>
-<?php include "sidebar.php"; ?>
 
-<div class="col-md-10 p-4">
+<div class="container-fluid p-4">
     <h2 class="mb-4 text-primary">🚗 Request Kendaraan</h2>
     <a href="dashboard.php" class="btn btn-secondary mb-3">← Kembali</a>
 
-    <!-- Flash Message SweetAlert -->
     <?php if (!empty($_SESSION['flash'])): ?>
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script>
         document.addEventListener('DOMContentLoaded', function () {
             Swal.fire({
@@ -62,14 +72,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="card shadow-sm">
         <div class="card-header bg-primary text-white">Form Request Kendaraan</div>
         <div class="card-body">
-            <form method="POST">
-                <div class="mb-3">
-                    <label for="id_kendaraan" class="form-label">Pilih Kendaraan</label>
-                    <select name="id_kendaraan" id="id_kendaraan" class="form-select" required>
-                        <option value="">-- Pilih Kendaraan --</option>
-                        <?= getAllKendaraanOptions(); ?>
-                    </select>
+            <form method="POST" id="requestForm">
+                <div id="request-container">
+                    <div class="request-item mb-3 border p-3 rounded bg-light">
+                        <label class="form-label fw-bold">Pilih Lokasi</label>
+                        <select class="form-select mb-2 lokasi" required>
+                            <option value="">-- Pilih Lokasi --</option>
+                            <?= getAllLokasiOptions(); ?>
+                        </select>
+
+                        <label class="form-label fw-bold">Pilih Jenis Kendaraan</label>
+                        <select class="form-select mb-2 jenis" required disabled>
+                            <option value="">-- Pilih Jenis Kendaraan --</option>
+                        </select>
+
+                        <label class="form-label fw-bold">Pilih Kendaraan</label>
+                        <select name="id_kendaraan[]" class="form-select kendaraan" required disabled>
+                            <option value="">-- Pilih Kendaraan --</option>
+                        </select>
+
+                        <button type="button" class="btn btn-danger btn-sm mt-2 removeRequest">Hapus</button>
+                    </div>
                 </div>
+                <button type="button" class="btn btn-secondary mb-3" id="addRequest">+ Tambah Kendaraan</button>
+                <br>
                 <button type="submit" class="btn btn-success">Kirim Request</button>
             </form>
         </div>
@@ -78,5 +104,107 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <?php include "script.php"; ?>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+// ============ TAMBAH REQUEST BARU ============
+document.getElementById('addRequest').addEventListener('click', function() {
+    const container = document.getElementById('request-container');
+    const firstItem = container.querySelector('.request-item');
+
+    // Clone form pertama
+    const clone = firstItem.cloneNode(true);
+
+    // Reset semua input/select di dalam clone
+    clone.querySelectorAll('select').forEach(sel => {
+        sel.value = '';
+        sel.disabled = true;
+    });
+
+    // Aktifkan kembali dropdown lokasi (biar bisa dipilih)
+    const lokasiSelect = clone.querySelector('.lokasi');
+    if (lokasiSelect) lokasiSelect.disabled = false;
+
+    // Tambahkan tombol hapus (kalau belum ada)
+    if (!clone.querySelector('.removeRequest')) {
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'btn btn-danger btn-sm mt-2 removeRequest';
+        removeBtn.textContent = 'Hapus';
+        clone.appendChild(removeBtn);
+    }
+
+    container.appendChild(clone);
+
+    // Jalankan fungsi listener untuk dropdown baru
+    initDropdownListeners(clone);
+});
+
+// ============ HAPUS REQUEST ============
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('removeRequest')) {
+        const item = e.target.closest('.request-item');
+        if (item && document.querySelectorAll('.request-item').length > 1) {
+            item.remove();
+        }
+    }
+});
+
+// ============ INISIALISASI DROPDOWN AJAX ============
+function initDropdownListeners(scope) {
+    const lokasi = scope.querySelector('.lokasi');
+    const jenis = scope.querySelector('.jenis');
+    const kendaraan = scope.querySelector('.kendaraan');
+
+    if (!lokasi || !jenis || !kendaraan) return;
+
+    // RESET dropdown setiap kali ganti lokasi
+    lokasi.addEventListener('change', function() {
+        const id = this.value;
+        jenis.innerHTML = '<option>Loading...</option>';
+        kendaraan.innerHTML = '<option>-- Pilih Kendaraan --</option>';
+        kendaraan.disabled = true;
+
+        if (id) {
+            fetch(`../../functions/ajax_kendaraan.php?lokasi_id=${id}`)
+                .then(res => res.text())
+                .then(data => {
+                    jenis.innerHTML = data || '<option value="">-- Tidak Ada Jenis --</option>';
+                    jenis.disabled = false;
+                })
+                .catch(() => {
+                    jenis.innerHTML = '<option>Error memuat data</option>';
+                });
+        } else {
+            jenis.innerHTML = '<option>-- Pilih Lokasi Dulu --</option>';
+            jenis.disabled = true;
+        }
+    });
+
+    // RESET kendaraan setiap kali ganti jenis kendaraan
+    jenis.addEventListener('change', function() {
+        const id_lokasi = lokasi.value;
+        const jenisVal = this.value;
+
+        kendaraan.innerHTML = '<option>Loading...</option>';
+        kendaraan.disabled = true;
+
+        if (id_lokasi && jenisVal) {
+            fetch(`../../functions/ajax_kendaraan.php?lokasi_id=${id_lokasi}&jenis_kendaraan=${encodeURIComponent(jenisVal)}`)
+                .then(res => res.text())
+                .then(data => {
+                    kendaraan.innerHTML = data || '<option value="">-- Tidak Ada Kendaraan --</option>';
+                    kendaraan.disabled = false;
+                })
+                .catch(() => {
+                    kendaraan.innerHTML = '<option>Error memuat data</option>';
+                });
+        } else {
+            kendaraan.innerHTML = '<option>-- Pilih Jenis Dulu --</option>';
+        }
+    });
+}
+
+// Jalankan inisialisasi pertama kali
+document.querySelectorAll('.request-item').forEach(initDropdownListeners);
+</script>
 </body>
 </html>

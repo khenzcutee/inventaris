@@ -25,7 +25,7 @@
                     <a class="nav-link" href="pengembalian.php">Pengembalian</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="view_data.php?type=pemakaianSelesai">History Pemakaian</a>
+                    <a class="nav-link" href="view_data.php?type=history">History Pemakaian</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="request.php">Request</a>

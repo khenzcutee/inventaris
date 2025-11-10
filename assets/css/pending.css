@@ -1,0 +1,88 @@
+/* Gunakan gaya yang sama dengan kendaraan.php */
+.card-item {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+    margin-bottom: 15px;
+    overflow: hidden;
+    transition: 0.3s;
+    cursor: pointer;
+}
+.card-item:hover {
+    background-color: #f8faff;
+}
+.card-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+}
+.card-top img {
+    width: 90px;
+    height: 70px;
+    border-radius: 8px;
+    object-fit: cover;
+    background-color: #f0f0f0;
+    flex-shrink: 0;
+}
+.card-top h6 {
+    font-size: 1rem;
+    margin: 0;
+    font-weight: 600;
+}
+.card-top small {
+    color: #555;
+}
+.card-details {
+    display: none;
+    padding: 10px 15px;
+    border-top: 1px solid #eee;
+    background-color: #fafafa;
+    font-size: 0.9rem;
+}
+.card-details.active {
+    display: block;
+    animation: fadeIn 0.3s ease;
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.filter-bar {
+    background: #fff;
+    border-radius: 12px;
+    padding: 10px 15px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    margin-bottom: 15px;
+}
+.app-header {
+    background-color: #0d6efd;
+    color: #fff;
+    padding: 0.8rem 1rem;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    border-bottom-left-radius: 14px;
+    border-bottom-right-radius: 14px;
+}
+.app-logo {
+    height: 40px;
+    width: auto;
+    border-radius: 8px;
+    object-fit: contain;
+    background-color: white;
+    padding: 2px;
+}
+@media (max-width: 768px) {
+    .card-top img {
+        width: 85px;
+        height: 65px;
+    }
+    .card-top h6 {
+        font-size: 0.95rem;
+    }
+    .card-top small {
+        font-size: 0.8rem;
+    }
+    .card-details {
+        font-size: 0.85rem;
+    }
+}
