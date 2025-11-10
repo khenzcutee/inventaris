@@ -155,7 +155,7 @@ function getCountHistoryUser($table) {
     }
 
     $id_user = $_SESSION['id'];
-    $sql = "SELECT COUNT(*) as total FROM $table WHERE id_status IN (5) AND id_user = $id_user";
+    $sql = "SELECT COUNT(*) as total FROM $table WHERE id_status = 5 AND id_user = $id_user";
     $result = mysqli_query($conn, $sql);
     
     if ($result) {
