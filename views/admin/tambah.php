@@ -66,7 +66,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <!-- Main Content -->
     <div class="container-fluid p-4">
         <h2 class="mb-4 text-primary">➕ Tambah <?= ucfirst($type) ?></h2>
-        <a href="view_Data.php?type=<?= $type ?>" class="btn btn-secondary mb-3">← Kembali</a>
+        <a href="view_data.php?type=<?= $type ?>" class="btn btn-secondary mb-3">← Kembali</a>
 
         <div class="card shadow-sm">
             <div class="card-header bg-primary text-white">

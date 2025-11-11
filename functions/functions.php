@@ -1361,24 +1361,35 @@ function updateData($type, $id, $data) {
     }
 
     // --- KENDARAAN ---
-    if ($type === 'kendaraan') {
-        $plat_nomor      = mysqli_real_escape_string($conn, $data['plat_nomor']);
-        $nomor_stnk      = mysqli_real_escape_string($conn, $data['nomor_stnk']);
-        $bahan_bakar     = mysqli_real_escape_string($conn, $data['bahan_bakar']);
-        $warna           = mysqli_real_escape_string($conn, $data['warna']);
-        $jenis_kendaraan = mysqli_real_escape_string($conn, $data['jenis_kendaraan']);
-        $merek           = mysqli_real_escape_string($conn, $data['merek']);
-        $kilometer       = (int)$data['kilometer'];
-        $id_lokasi       = (int)$data['id_lokasi'];
-        $id_status       = (int)$data['id_status']; // pastikan 1..3
+if ($type === 'kendaraan') {
+    $plat_nomor      = mysqli_real_escape_string($conn, $data['plat_nomor']);
+    $nomor_stnk      = mysqli_real_escape_string($conn, $data['nomor_stnk']);
+    $bahan_bakar     = mysqli_real_escape_string($conn, $data['bahan_bakar']);
+    $warna           = mysqli_real_escape_string($conn, $data['warna']);
+    $jenis_kendaraan = mysqli_real_escape_string($conn, $data['jenis_kendaraan']);
+    $merek           = mysqli_real_escape_string($conn, $data['merek']);
+    $kilometer       = (int)$data['kilometer'];
+    $id_lokasi       = (int)$data['id_lokasi'];
+    $id_status       = (int)$data['id_status'];
 
-        $sql = "UPDATE kendaraan
-                SET plat_nomor='$plat_nomor', nomor_stnk='$nomor_stnk', bahan_bakar='$bahan_bakar', warna='$warna',
-                    jenis_kendaraan='$jenis_kendaraan', merek='$merek', kilometer=$kilometer,
-                    id_lokasi=$id_lokasi, id_status=$id_status
-                WHERE id=$id";
-        return mysqli_query($conn, $sql);
-    }
+    // Tambahan fix: gambar
+    $gambar = mysqli_real_escape_string($conn, $data['gambar']);
+
+    $sql = "UPDATE kendaraan
+            SET plat_nomor='$plat_nomor',
+                nomor_stnk='$nomor_stnk',
+                bahan_bakar='$bahan_bakar',
+                warna='$warna',
+                jenis_kendaraan='$jenis_kendaraan',
+                merek='$merek',
+                kilometer=$kilometer,
+                id_lokasi=$id_lokasi,
+                id_status=$id_status,
+                gambar='$gambar'
+            WHERE id=$id";
+
+    return mysqli_query($conn, $sql);
+}
 
     // --- PEMAKAIAN ---
     elseif ($type === 'pemakaian') {
