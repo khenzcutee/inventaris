@@ -31,7 +31,7 @@ if (isset($_GET['delete'], $_GET['id'], $_GET['type'])) {
         $_SESSION['flash'] = ['icon'=>'error','title'=>'Gagal','text'=>'Terjadi kesalahan saat menghapus data.'];
     }
 
-    header("Location: view_Data.php?type=" . urlencode($deleteType));
+    header("Location: view_data.php?type=" . urlencode($deleteType));
     exit;
 }
 
