@@ -243,7 +243,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['logout'])) {
                                                class="btn btn-warning btn-sm">Edit</a>
                                         <?php endif; ?>
 
-                                        <a href="view_Data.php?type=<?= htmlspecialchars($page, ENT_QUOTES, 'UTF-8') ?>&delete=1&id=<?= (int)$row['id'] ?>"
+                                        <a href="view_data.php?type=<?= htmlspecialchars($page, ENT_QUOTES, 'UTF-8') ?>&delete=1&id=<?= (int)$row['id'] ?>"
                                            class="btn btn-danger btn-sm btn-delete">Hapus</a>
                                     </td>
                                 </tr>
