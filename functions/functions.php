@@ -832,7 +832,7 @@ function prosesPengembalian($id_pemakaian, $tanggal_masuk, $kilometer_akhir) {
     // ✅ Validasi km akhir (tidak boleh lebih kecil atau sama)
     if ($kilometer_akhir <= $km_awal) {
         mysqli_rollback($conn);
-        return false;
+        return false;`d
     }
 
     // Update pemakaian
